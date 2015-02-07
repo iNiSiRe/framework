@@ -1,0 +1,16 @@
+{
+  "name": "inisire/framework",
+
+  "authors": [
+    {
+      "name": "iNiSiRe",
+      "email": "inisire@gmail.com"
+    }
+  ],
+
+  "autoload": {
+    "psr-0": {
+      "Framework": "src/"
+    }
+  }
+}
