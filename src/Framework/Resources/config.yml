@@ -1,0 +1,20 @@
+services:
+  database.manager:
+    class: Framework\Core\Database\Manager
+  database.migrations:
+      class: Framework\Core\Database\Migrations
+
+commands:
+  database.migrate:
+    class: Framework\Core\Database\Command\MigrateCommand
+
+parameters:
+  database:
+    host: 192.168.0.200
+    name: application
+    user: root
+    password:
+
+  migrations:
+    directoryPath: migrations
+    tableName: versions

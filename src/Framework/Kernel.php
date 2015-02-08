@@ -2,11 +2,15 @@
 
 namespace Framework;
 
+use Framework\Core\DependencyInjection\Container;
 use Slim\Slim;
 use Symfony\Component\Yaml\Yaml;
 
 class Kernel
 {
+    const MODE_DEFAULT = 1;
+    const MODE_CONSOLE = 2;
+
     /**
      * @var array
      */
@@ -17,27 +21,95 @@ class Kernel
      */
     private $application;
 
+    /**
+     * @var Container
+     */
+    private $container;
+
+    /**
+     * @var array
+     */
+    private $argvInput;
+
     public function __construct()
     {
         $this->application = new Slim();
 
-        $this->loadConfig();
-        $this->loadRouter();
+        $this->config = array_merge(
+            $this->loadConfig(__DIR__ . '/Resources/config.yml'),
+            $this->loadConfig(ROOT_DIR . '/config/config.yml')
+        );
 
-        $this->application->run();
+        $this->compileContainer();
     }
 
-    private function loadConfig()
+    public function run($mode = self::MODE_DEFAULT)
     {
-        $configFile = ROOT_DIR . '/config/config.yml';
+        switch ($mode) {
+            case self::MODE_DEFAULT:
+                $this->loadRouter();
+                $this->application->run();
+                break;
 
-        if (!file_exists($configFile)) {
-            throw new \Exception(sprintf('Config file %s not exists', $configFile));
+            case self::MODE_CONSOLE:
+                $this->runCommand();
+                break;
+        }
+    }
+
+    public function setArgvInput($argv)
+    {
+        $this->argvInput = $argv;
+    }
+
+    public function runCommand()
+    {
+        if (!isset($this->argvInput[1])) {
+            return false;
         }
 
-        $configContent = file_get_contents($configFile);
+        $commandName = $this->argvInput[1];
+        $this->container->executeCommand($commandName, $this->argvInput);
+    }
 
-        $this->config = Yaml::parse($configContent);
+    /**
+     * Compile all services in container
+     */
+    private function compileContainer()
+    {
+        $container = new Container();
+
+        foreach ($this->config['services'] as $name => $service) {
+            $container->add($name, $service['class']);
+        }
+
+        foreach ($this->config['parameters'] as $name => $value) {
+            $container->addParameter($name, $value);
+        }
+
+        foreach ($this->config['commands'] as $name => $command) {
+            $container->addCommand($name, $command['class']);
+        }
+
+        $this->container = $container;
+    }
+
+    /**
+     * @param string $file
+     *
+     * @return array
+     *
+     * @throws \Exception
+     */
+    private function loadConfig($file)
+    {
+        if (!file_exists($file)) {
+            throw new \Exception(sprintf('Config file %s not exists', $file));
+        }
+
+        $configContent = file_get_contents($file);
+
+        return Yaml::parse($configContent);
     }
 
     /**
@@ -83,7 +155,7 @@ class Kernel
         $class = $parts[0];
         $method = sprintf('%sAction', $parts[1]);
         $object = new $class();
-
+        $object->setContainer($this->container);
         if (!method_exists($object, $method)) {
             throw new \Exception(sprintf('Bad controller name %s', $controller));
         }
