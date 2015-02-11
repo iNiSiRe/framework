@@ -6,7 +6,9 @@ services:
 
 commands:
   database.migrate:
-    class: Framework\Core\Database\Command\MigrateCommand
+    class: Framework\Core\Database\Command\MigrateCommand:migrate
+  database.status:
+      class: Framework\Core\Database\Command\MigrateCommand:status
 
 parameters:
   database:

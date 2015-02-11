@@ -33,27 +33,11 @@ class Manager extends AbstractContainerService
 
     /**
      * @param $query
-     * @param array $parameters
      *
-     * @throws \Exception
-     *
-     * @return array
+     * @return Query
      */
-    public function executeQuery($query, $parameters = [])
+    public function createQuery($query)
     {
-        $this->statement = $this->connection->prepare($query);
-        $result = $this->statement->execute($parameters);
-
-        if (!$result) {
-            $error = $this->statement->errorInfo();
-            throw new \Exception($error[2]);
-        }
-
-        return $result;
-    }
-
-    public function getResult()
-    {
-        return $this->statement->fetchAll();
+        return new Query($this->connection->prepare($query));
     }
 }

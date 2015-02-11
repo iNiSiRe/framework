@@ -74,6 +74,7 @@ class Container
     public function executeCommand($name, $argvInput)
     {
         if (!isset($this->commands[$name])) {
+            list ($class, $method) = explode(':', $this->commands[$name]);
             throw new \Exception(sprintf('Command "%s" is undefined', $name));
         }
 
