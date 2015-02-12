@@ -69,17 +69,23 @@ class Container
 
     /**
      * @param $name
+     * @param $argvInput
+     *
      * @throws \Exception
      */
     public function executeCommand($name, $argvInput)
     {
         if (!isset($this->commands[$name])) {
-            list ($class, $method) = explode(':', $this->commands[$name]);
             throw new \Exception(sprintf('Command "%s" is undefined', $name));
         }
+        list ($class, $method) = explode(':', $this->commands[$name]);
 
-        $instance = new $this->commands[$name]($this);
+        $instance = new $class($this);
 
-        return $instance->execute($argvInput);
+        if (!method_exists($instance, $method)) {
+            throw new \Exception(sprintf('Method "%s" doesn\'t exists in "%s"', $method, $class));
+        }
+
+        return $instance->$method($argvInput);
     }
 }

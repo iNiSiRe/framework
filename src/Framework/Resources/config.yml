@@ -5,10 +5,12 @@ services:
       class: Framework\Core\Database\Migrations
 
 commands:
-  database.migrate:
+  database.migrations.migrate:
     class: Framework\Core\Database\Command\MigrateCommand:migrate
-  database.status:
+  database.migrations.status:
       class: Framework\Core\Database\Command\MigrateCommand:status
+  database.migrations.generate:
+      class: Framework\Core\Database\Command\MigrateCommand:generate
 
 parameters:
   database:

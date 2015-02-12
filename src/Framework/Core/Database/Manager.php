@@ -40,4 +40,11 @@ class Manager extends AbstractContainerService
     {
         return new Query($this->connection->prepare($query));
     }
+
+    public function executeQuery($query)
+    {
+        $query = new Query($this->connection->prepare($query));
+
+        return $query->execute();
+    }
 }

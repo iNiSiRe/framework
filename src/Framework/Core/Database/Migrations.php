@@ -5,6 +5,13 @@ namespace Framework\Core\Database;
 use Framework\Core\DependencyInjection\AbstractContainerService;
 use Framework\Core\DependencyInjection\Container;
 
+/**
+ * Database migrations logic
+ *
+ * Class Migrations
+ *
+ * @package Framework\Core\Database
+ */
 class Migrations extends AbstractContainerService
 {
     /**
@@ -13,15 +20,17 @@ class Migrations extends AbstractContainerService
     private $migrationsDir;
 
     /**
-     * @var string
-     */
-    private $tableName;
-
-    /**
      * @var Manager
      */
     private $manager;
 
+    /**
+     * Check config and prepare environment
+     *
+     * @param Container $container
+     *
+     * @throws \Exception
+     */
     public function __construct(Container $container)
     {
         parent::__constructor($container);
@@ -38,22 +47,22 @@ class Migrations extends AbstractContainerService
         $this->prepareEnvironment();
     }
 
-    private function getCurrentMigrations()
-    {
-        $query = $this->manager->createQuery('SELECT version FROM migration_versions ORDER BY created_at');
-        return array_values($query->getResult());
-    }
-
+    /**
+     * Check migrations status
+     *
+     * @return array
+     */
     public function status()
     {
         $availableMigrations = $this->getAvailableMigrations();
         $currentMigrations = $this->getCurrentMigrations();
 
-        echo sprintf('Available migrations: %s %s', count($availableMigrations), PHP_EOL);
-        echo sprintf('Executed migrations: %s %s', count($currentMigrations), PHP_EOL);
-        echo sprintf('Current version: %s %s', end($currentMigrations), PHP_EOL);
+        return [$currentMigrations, $availableMigrations];
     }
 
+    /**
+     * Complete migration
+     */
     public function migrate()
     {
         $availableMigrations = $this->getAvailableMigrations();
@@ -74,8 +83,33 @@ class Migrations extends AbstractContainerService
         }
     }
 
+    /**
+     * Generate empty migration file
+     *
+     * @return string
+     */
+    public function generate()
+    {
+        $date = new \DateTime();
+        $fileName = sprintf('%s/%s.sql', $this->migrationsDir, $date->format('Ymdhi'));
+        $file = fopen($fileName, 'w');
+        fclose($file);
+
+        return $fileName;
+    }
+
+    /**
+     * Execute migration and add version
+     *
+     * @param $query
+     * @param $name
+     *
+     * @throws \Exception
+     */
     private function applyMigration($query, $name)
     {
+        //TODO: This queries should be executed in transaction
+
         $migrationQuery = $this->manager->createQuery($query);
         $migrationQuery->getResult();
 
@@ -96,6 +130,22 @@ class Migrations extends AbstractContainerService
         );
     }
 
+    /**
+     * @return array
+     *
+     * @throws \Exception
+     */
+    private function getCurrentMigrations()
+    {
+        $query = $this->manager->createQuery('SELECT version FROM migration_versions ORDER BY created_at');
+        $result = $query->getResult();
+
+        return ($result !== false) ? array_values($result) : [];
+    }
+
+    /**
+     * @return array
+     */
     private function getAvailableMigrations()
     {
         $migrations = array_filter(scandir($this->migrationsDir), function ($filename) {
@@ -120,14 +170,15 @@ class Migrations extends AbstractContainerService
         $this->tableName = $config['tableName'];
     }
 
+    /**
+     * Create dir and database table for migrations
+     */
     private function prepareEnvironment()
     {
         if (!is_dir($this->migrationsDir)) {
             mkdir($this->migrationsDir);
         }
 
-        if (!$this->manager->createQuery('DESCRIBE migration_versions')) {
-            $this->manager->createQuery('CREATE TABLE migration_versions (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, version VARCHAR(32) UNIQUE, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)');
-        }
+        $this->manager->executeQuery('CREATE TABLE IF NOT EXISTS migration_versions (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, version VARCHAR(32) UNIQUE, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)');
     }
 }
