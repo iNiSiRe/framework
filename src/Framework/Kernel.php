@@ -35,12 +35,33 @@ class Kernel
     {
         $this->application = new Slim();
 
-        $this->config = array_merge(
+        $this->config = $this->mergeConfigs(
             $this->loadConfig(__DIR__ . '/Resources/config.yml'),
             $this->loadConfig(ROOT_DIR . '/config/config.yml')
         );
 
         $this->compileContainer();
+    }
+
+    /**
+     * @param $baseConfig
+     * @param $userConfig
+     *
+     * @return array
+     */
+    private function mergeConfigs($baseConfig, $userConfig)
+    {
+        $sections = ['services', 'parameters', 'routes', 'commands'];
+
+        $resultConfig = [];
+        foreach ($sections as $section) {
+            $resultConfig[$section] = array_merge(
+                isset($baseConfig[$section]) ? $baseConfig[$section] : [],
+                isset($userConfig[$section]) ? $userConfig[$section] : []
+            );
+        }
+
+        return $resultConfig;
     }
 
     public function run($mode = self::MODE_DEFAULT)

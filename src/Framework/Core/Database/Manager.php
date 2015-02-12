@@ -18,10 +18,10 @@ class Manager extends AbstractContainerService
     private $connection;
 
     /**
-     * @var \PDOStatement
+     * @param Container $container
+     *
+     * @throws \Exception
      */
-    private $statement;
-
     public function __construct(Container $container)
     {
         parent::__constructor($container);
@@ -41,9 +41,21 @@ class Manager extends AbstractContainerService
         return new Query($this->connection->prepare($query));
     }
 
-    public function executeQuery($query)
+    /**
+     * @param $query
+     * @param array $parameters
+     *
+     * @return bool
+     *
+     * @throws \Exception
+     */
+    public function executeQuery($query, $parameters = [])
     {
         $query = new Query($this->connection->prepare($query));
+
+        if ($parameters) {
+            $query->setParameters($parameters);
+        }
 
         return $query->execute();
     }
