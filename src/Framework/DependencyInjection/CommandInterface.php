@@ -1,6 +1,6 @@
 <?php
 
-namespace Framework\Core\DependencyInjection;
+namespace Framework\DependencyInjection;
 
 
 interface CommandInterface

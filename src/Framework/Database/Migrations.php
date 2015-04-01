@@ -1,9 +1,9 @@
 <?php
 
-namespace Framework\Core\Database;
+namespace Framework\Database;
 
-use Framework\Core\DependencyInjection\AbstractContainerService;
-use Framework\Core\DependencyInjection\Container;
+use Framework\DependencyInjection\ContainerService;
+use Framework\DependencyInjection\Container;
 
 /**
  * Database migrations logic
@@ -12,7 +12,7 @@ use Framework\Core\DependencyInjection\Container;
  *
  * @package Framework\Core\Database
  */
-class Migrations extends AbstractContainerService
+class Migrations extends ContainerService
 {
     /**
      * @var string
@@ -31,9 +31,9 @@ class Migrations extends AbstractContainerService
      *
      * @throws \Exception
      */
-    public function __construct(Container $container)
+    public function __construct(Container $container, array $config)
     {
-        parent::__constructor($container);
+        parent::__construct($container, $config);
 
         $this->manager = $this->container->get('database.manager');
 
@@ -45,6 +45,7 @@ class Migrations extends AbstractContainerService
 
         $this->applyConfig($config);
         $this->prepareEnvironment();
+        $this->container = $container;
     }
 
     /**
@@ -110,12 +111,8 @@ class Migrations extends AbstractContainerService
     {
         //TODO: This queries should be executed in transaction
 
-        $migrationQuery = $this->manager->createQuery($query);
-        $migrationQuery->getResult();
-
-        $addVersionQuery = $this->manager->createQuery('INSERT INTO migration_versions (version) VALUES (:name)');
-        $addVersionQuery->setParameters([':name' => $name])
-            ->getResult();
+        $this->manager->getQuery($query)->execute();
+        $this->manager->getQuery('INSERT INTO migration_versions (version) VALUES (:name)', [':name' => $name])->execute();
     }
 
     /**
@@ -137,7 +134,7 @@ class Migrations extends AbstractContainerService
      */
     private function getCurrentMigrations()
     {
-        $query = $this->manager->createQuery('SELECT version FROM migration_versions ORDER BY created_at');
+        $query = $this->manager->getQuery('SELECT version FROM migration_versions ORDER BY created_at');
         $result = $query->getResult();
 
         return ($result !== false) ? array_values($result) : [];
@@ -179,6 +176,8 @@ class Migrations extends AbstractContainerService
             mkdir($this->migrationsDir);
         }
 
-        $this->manager->executeQuery('CREATE TABLE IF NOT EXISTS migration_versions (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, version VARCHAR(32) UNIQUE, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)');
+        $sql = 'CREATE TABLE IF NOT EXISTS migration_versions (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, version VARCHAR(32) UNIQUE, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)';
+
+        $this->manager->getQuery($sql)->execute();
     }
 }

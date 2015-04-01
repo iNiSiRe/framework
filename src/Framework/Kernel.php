@@ -2,8 +2,13 @@
 
 namespace Framework;
 
-use Framework\Core\DependencyInjection\Container;
-use Slim\Slim;
+use Composer\Autoload\ClassLoader;
+use Framework\Configuration\Configuration;
+use Framework\DependencyInjection\Container\Container;
+use Framework\Http\Response;
+use Framework\Router\Route;
+use Framework\Router\Router;
+use Framework\Http\Request;
 use Symfony\Component\Yaml\Yaml;
 
 class Kernel
@@ -11,15 +16,13 @@ class Kernel
     const MODE_DEFAULT = 1;
     const MODE_CONSOLE = 2;
 
+    const ENV_DEV = 1;
+    const ENV_PROD = 2;
+
     /**
      * @var array
      */
     private $config = [];
-
-    /**
-     * @var Slim
-     */
-    private $application;
 
     /**
      * @var Container
@@ -31,37 +34,23 @@ class Kernel
      */
     private $argvInput;
 
-    public function __construct()
-    {
-        $this->application = new Slim();
-
-        $this->config = $this->mergeConfigs(
-            $this->loadConfig(__DIR__ . '/Resources/config.yml'),
-            $this->loadConfig(ROOT_DIR . '/config/config.yml')
-        );
-
-        $this->compileContainer();
-    }
+    private $loader;
 
     /**
-     * @param $baseConfig
-     * @param $userConfig
-     *
-     * @return array
+     * @var Router
      */
-    private function mergeConfigs($baseConfig, $userConfig)
+    private $router;
+
+    /**
+     * @param $environment
+     * @param $configurationFile
+     */
+    public function __construct($environment, $configurationFile)
     {
-        $sections = ['services', 'parameters', 'routes', 'commands'];
-
-        $resultConfig = [];
-        foreach ($sections as $section) {
-            $resultConfig[$section] = array_merge(
-                isset($baseConfig[$section]) ? $baseConfig[$section] : [],
-                isset($userConfig[$section]) ? $userConfig[$section] : []
-            );
-        }
-
-        return $resultConfig;
+        $this->container = new Container($environment);
+        $this->container->addConfigFile(__DIR__ . '/Resources/config.yml');
+        $this->container->addConfigFile($configurationFile);
+        $this->container->prepare();
     }
 
     public function run($mode = self::MODE_DEFAULT)
@@ -69,13 +58,41 @@ class Kernel
         switch ($mode) {
             case self::MODE_DEFAULT:
                 $this->loadRouter();
-                $this->application->run();
                 break;
 
             case self::MODE_CONSOLE:
                 $this->runCommand();
                 break;
         }
+    }
+
+    /**
+     * @param Request $request
+     *
+     * @return Response
+     *
+     * @throws \Exception
+     */
+    public function handleRequest(Request $request)
+    {
+        try {
+            $handler = $this->router->getRouteByRequest($request)->getHandler();
+            $controller = $this->getCallable($handler);
+            $arguments = [$request];
+            $response = call_user_func_array($controller, $arguments);
+        } catch (\Exception $e) {
+
+            $errorBody = sprintf('Uncaught exception "%s" with message "%s" in file "%s" on line %s',
+                get_class($e),
+                $e->getMessage(),
+                $e->getFile(),
+                $e->getLine()
+            );
+
+            $response = new Response($errorBody, ['Content-Type' => 'text/html'], 500);
+        }
+
+        return $response;
     }
 
     public function setArgvInput($argv)
@@ -94,73 +111,25 @@ class Kernel
     }
 
     /**
-     * Compile all services in container
-     */
-    private function compileContainer()
-    {
-        $container = new Container();
-
-        foreach ($this->config['services'] as $name => $service) {
-            $container->add($name, $service['class']);
-        }
-
-        foreach ($this->config['parameters'] as $name => $value) {
-            $container->addParameter($name, $value);
-        }
-
-        foreach ($this->config['commands'] as $name => $command) {
-            $container->addCommand($name, $command['class']);
-        }
-
-        $this->container = $container;
-    }
-
-    /**
-     * @param string $file
-     *
-     * @return array
-     *
-     * @throws \Exception
-     */
-    private function loadConfig($file)
-    {
-        if (!file_exists($file)) {
-            throw new \Exception(sprintf('Config file %s not exists', $file));
-        }
-
-        $configContent = file_get_contents($file);
-
-        return Yaml::parse($configContent);
-    }
-
-    /**
      * Load routes
      *
      * @throws \Exception
      */
     private function loadRouter()
     {
-        $application = $this->application;
-
-        $availableMethods = ['GET', 'POST', 'PUT', 'DELETE'];
+        $this->router = new Router();
 
         foreach ($this->config['routes'] as $name => $params) {
 
-            if (!in_array($params['method'], $availableMethods)) {
+            if (!in_array($params['method'], ['POST', 'GET'])) {
                 throw new \Exception(sprintf('Unavailable action method "%s" in route "%s', $params['method'], $name));
             }
 
-            $requestMethod = mb_strtolower($params['method']);
-
-            $this->application->$requestMethod($params['pattern'],
-                function () use ($application, $params) {
-                    $args = array_merge( [$application->request], func_get_args());
-                    $controller = $this->getCallable($params['controller']);
-                    $response = call_user_func_array($controller, $args);
-                    $application->response->setBody($response->getBody());
-                })
-                ->name($name);
+            $route = new Route($name, $params['pattern'], $params['method'], $params['handler']);
+            $this->router->addRoute($route);
         }
+
+        return true;
     }
 
     /**
@@ -175,12 +144,19 @@ class Kernel
         $parts = explode(':', $controller);
         $class = $parts[0];
         $method = sprintf('%sAction', $parts[1]);
-        $object = new $class();
-        $object->setContainer($this->container);
+        $object = new $class($this->container, $this->config);
         if (!method_exists($object, $method)) {
             throw new \Exception(sprintf('Bad controller name %s', $controller));
         }
 
         return [$object, $method];
+    }
+
+    /**
+     * @return ClassLoader
+     */
+    public function getLoader()
+    {
+        return $this->loader;
     }
 }

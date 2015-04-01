@@ -1,24 +1,36 @@
 services:
-  database.manager:
-    class: Framework\Core\Database\Manager
+  memcached:
+    builder: Framework\Cache\MemcachedBuilder
+    configuration:
+      host: 127.0.0.1
+      port: 11211
+
+  twig:
+    builder: Framework\View\TwigBuilder
+    configuration:
+      debug: true
+      paths: /
+
+  doctrine:
+    class: Framework\Database\ORM\Doctrine
+    configuration:
+      driver: mysql_pdo
+      user: default
+      password: default
+      dbname: default
+
   database.migrations:
-      class: Framework\Core\Database\Migrations
+    class: Framework\Database\Migrations
 
 commands:
   database.migrations.migrate:
-    class: Framework\Core\Database\Command\MigrateCommand:migrate
+    class: Framework\Database\Command\MigrateCommand:migrate
+
   database.migrations.status:
-      class: Framework\Core\Database\Command\MigrateCommand:status
+    class: Framework\Database\Command\MigrateCommand:status
+
   database.migrations.generate:
-      class: Framework\Core\Database\Command\MigrateCommand:generate
+    class: Framework\Database\Command\MigrateCommand:generate
 
-parameters:
-  database:
-    host: 192.168.0.200
-    name: application
-    user: root
-    password:
-
-  migrations:
-    directoryPath: migrations
-    tableName: versions
+  doctrine:
+    class: Framework\Database\Command\MigrateCommand:schema

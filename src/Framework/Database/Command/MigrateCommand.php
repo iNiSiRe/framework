@@ -1,8 +1,9 @@
 <?php
 
-namespace Framework\Core\Database\Command;
+namespace Framework\Database\Command;
 
-use Framework\Core\DependencyInjection\AbstractCommand;
+use Doctrine\ORM\Tools\Console\ConsoleRunner;
+use Framework\DependencyInjection\AbstractCommand;
 
 class MigrateCommand extends AbstractCommand
 {
@@ -39,5 +40,13 @@ class MigrateCommand extends AbstractCommand
         echo PHP_EOL;
         echo sprintf('Generated empty migration "%s"', $fileName);
         echo PHP_EOL;
+    }
+
+    public function schema($argvInput)
+    {
+        $entityManager = $this->container->get('doctrine.manager');
+        $helperSet = ConsoleRunner::createHelperSet($entityManager);
+        $_SERVER['argv'][1] = 'orm:schema-tool:update';
+        ConsoleRunner::run($helperSet, []);
     }
 }
