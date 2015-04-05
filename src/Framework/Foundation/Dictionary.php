@@ -36,4 +36,12 @@ class Dictionary
     {
         $this->dictionary[$key] = $value;
     }
+
+    /**
+     * @param array $items
+     */
+    public function add(array $items)
+    {
+        $this->dictionary = array_merge($this->dictionary, $items);
+    }
 }

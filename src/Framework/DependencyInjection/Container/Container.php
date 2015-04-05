@@ -2,12 +2,15 @@
 
 namespace Framework\DependencyInjection\Container;
 
-use Framework\Configuration\Configuration;
+use Framework\Configuration\ConfigurationLoader;
 use Framework\Foundation\Dictionary;
 use Framework\Kernel;
 
 class Container
 {
+    const SECTION_PARAMETERS = 'parameters';
+    const SECTION_SERVICES = 'services';
+
     private $services;
 
     /**
@@ -21,42 +24,27 @@ class Container
     private $environment;
 
     /**
-     * @param int $environment
+     * @param int   $environment
+     * @param array $configuration
      */
-    public function __construct($environment = Kernel::ENV_DEV)
+    public function __construct($environment = Kernel::ENV_DEV, array $configuration)
     {
         $this->environment = $environment;
+        $this->parameters = new Dictionary();
         $this->services = new Dictionary();
-        $this->configuration = new Configuration();
+        $this->compile($configuration);
     }
 
-    public function addConfigFile($file)
+    public function compile($configuration)
     {
-        $this->configuration->addFile($file);
-    }
+        $parameters = isset($configuration[self::SECTION_PARAMETERS]) ? $configuration[self::SECTION_PARAMETERS] : [];
+        $services = isset($configuration[self::SECTION_SERVICES]) ? $configuration[self::SECTION_SERVICES] : [];
 
-    public function prepare()
-    {
-        $this->configuration->load();
+        $this->parameters->add($parameters);
 
-        $this->parameters = new Dictionary($this->configuration->get('parameters', []));
-
-        foreach ($this->configuration->get('services', []) as $name => $definition) {
-            $this->add($name, $definition['class']);
+        foreach ($services as $name => $definition) {
+            $this->services->set($name, $definition);
         }
-
-//        foreach ($this->configuration->get('commands', []) as $name => $command) {
-//            $this->addCommand($name, $command['class']);
-//        }
-    }
-
-    /**
-     * @param $name
-     * @param $class
-     */
-    public function add($name, $class)
-    {
-        $this->services[$name] = $class;
     }
 
     /**
@@ -67,18 +55,28 @@ class Container
      * @throws \Exception
      */
     public function get($name) {
-        if (!isset($this->services[$name])) {
+        if (!$this->services->get($name)) {
             throw new \Exception(sprintf('Service "%s" is undefined', $name));
         }
 
-        if (!is_object($this->services[$name])) {
-            $class = $this->services[$name];
-            $configuration = $this->configuration->get($name, []);
-            $serviceInstance = new $class($this, $configuration);
-            $this->services[$name] = $serviceInstance->load();
+        if (!$this->services->get($name) instanceof Service) {
+            $definition = $this->services->get($name);
+            $class = $definition['class'];
+            $configuration = isset($definition['configuration']) ? $definition['configuration'] : [];
+            $instance = new $class($this, $configuration);
+
+            if ($instance instanceof ServiceBuilder) {
+                $instance = $instance->build();
+            }
+
+            if (!$instance instanceof Service) {
+                throw new \Exception(sprintf('Service "%s" should be instance of "%s"', $name, Service::class));
+            }
+
+            $this->services->set($name, $instance);
         }
 
-        return $this->services[$name];
+        return $this->services->get($name);
     }
 
     /**
@@ -95,29 +93,5 @@ class Container
         }
 
         return $this->parameters[$name];
-    }
-
-    /**
-     * @todo Refactor commands (rename this method to getCommand, to CommandInterface add method "run")
-     *
-     * @param $name
-     * @param $argvInput
-     *
-     * @throws \Exception
-     */
-    public function executeCommand($name, $argvInput)
-    {
-        if (!isset($this->commands[$name])) {
-            throw new \Exception(sprintf('Command "%s" is undefined', $name));
-        }
-        list ($class, $method) = explode(':', $this->commands[$name]);
-
-        $instance = new $class($this);
-
-        if (!method_exists($instance, $method)) {
-            throw new \Exception(sprintf('Method "%s" doesn\'t exists in "%s"', $method, $class));
-        }
-
-        return $instance->$method($argvInput);
     }
 }

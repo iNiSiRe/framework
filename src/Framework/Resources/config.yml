@@ -1,30 +1,31 @@
 services:
   memcached:
-    builder: Framework\Cache\MemcachedBuilder
+    class: Framework\Cache\MemcachedBuilder
+    configuration:
+      host: 127.0.0.1
+      port: 11211
 
   twig:
-    builder: Framework\View\TwigBuilder
+    class: Framework\View\TwigBuilder
+    configuration:
+      debug: true
+      paths: /
 
   doctrine:
     class: Framework\Database\ORM\Doctrine
+    configuration:
+      driver: mysql_pdo
+      user: default
+      password: default
+      dbname: default
+
+  router:
+    class: Framework\Router\Router
+    configuration:
+      files:
 
   database.migrations:
     class: Framework\Database\Migrations
-
-configuration:
-  doctrine:
-    driver: mysql_pdo
-    user: default
-    password: default
-    dbname: default
-
-  twig:
-    debug: true
-    paths: /
-
-  memcached:
-    host: 127.0.0.1
-    port: 11211
 
 commands:
   database.migrations.migrate:

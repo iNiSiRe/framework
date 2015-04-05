@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Pride
- * Date: 3/21/2015
- * Time: 1:18 AM
- */
 
 namespace Framework\Router;
 
