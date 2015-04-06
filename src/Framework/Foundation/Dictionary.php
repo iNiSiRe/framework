@@ -44,4 +44,12 @@ class Dictionary
     {
         $this->dictionary = array_merge($this->dictionary, $items);
     }
+
+    /**
+     * @return array
+     */
+    public function all()
+    {
+        return $this->dictionary;
+    }
 }

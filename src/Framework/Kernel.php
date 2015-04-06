@@ -9,6 +9,8 @@ use Framework\Http\Response;
 use Framework\Router\Route;
 use Framework\Router\Router;
 use Framework\Http\Request;
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Helper\HelperSet;
 use Symfony\Component\Yaml\Yaml;
 
 class Kernel
@@ -61,5 +63,16 @@ class Kernel
         }
 
         return $response;
+    }
+
+    public function runCommand()
+    {
+        $application = new Application();
+        $application->setHelperSet(new HelperSet(['container' => $this->container]));
+        foreach ($this->container->commands->all() as $name => $class) {
+            $command = new $class;
+            $application->add($command);
+        }
+        $application->run();
     }
 }
