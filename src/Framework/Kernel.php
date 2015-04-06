@@ -4,11 +4,14 @@ namespace Framework;
 
 use Composer\Autoload\ClassLoader;
 use Framework\Configuration\ConfigurationLoader;
+use Framework\Database\ORM\Doctrine\Command\UpdateSchemaCommand;
 use Framework\DependencyInjection\Container\Container;
 use Framework\Http\Response;
 use Framework\Router\Route;
 use Framework\Router\Router;
 use Framework\Http\Request;
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Helper\HelperSet;
 use Symfony\Component\Yaml\Yaml;
 
 class Kernel
@@ -25,8 +28,8 @@ class Kernel
     private $container;
 
     /**
-     * @param $environment
-     * @param $configurationFile
+     * @param     $environment
+     * @param     $configurationFile
      */
     public function __construct($environment, $configurationFile)
     {
@@ -61,5 +64,16 @@ class Kernel
         }
 
         return $response;
+    }
+
+    public function runCommand()
+    {
+        $application = new Application();
+        $helperSet = new HelperSet(['container' => $this->container]);
+        $application->setHelperSet($helperSet);
+        $application->addCommands([
+            new UpdateSchemaCommand()
+        ]);
+        $application->run();
     }
 }
