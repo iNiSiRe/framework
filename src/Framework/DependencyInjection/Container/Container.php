@@ -10,13 +10,22 @@ class Container
 {
     const SECTION_PARAMETERS = 'parameters';
     const SECTION_SERVICES = 'services';
-
-    private $services;
+    const SECTION_COMMANDS = 'commands';
 
     /**
      * @var Dictionary
      */
-    private $parameters;
+    public $parameters;
+
+    /**
+     * @var Dictionary
+     */
+    public $services;
+
+    /**
+     * @var Dictionary
+     */
+    public $commands;
 
     /**
      * @var int
@@ -32,6 +41,7 @@ class Container
         $this->environment = $environment;
         $this->parameters = new Dictionary();
         $this->services = new Dictionary();
+        $this->commands = new Dictionary();
         $this->compile($configuration);
     }
 
@@ -39,12 +49,11 @@ class Container
     {
         $parameters = isset($configuration[self::SECTION_PARAMETERS]) ? $configuration[self::SECTION_PARAMETERS] : [];
         $services = isset($configuration[self::SECTION_SERVICES]) ? $configuration[self::SECTION_SERVICES] : [];
+        $commands = isset($configuration[self::SECTION_COMMANDS]) ? $configuration[self::SECTION_COMMANDS] : [];
 
         $this->parameters->add($parameters);
-
-        foreach ($services as $name => $definition) {
-            $this->services->set($name, $definition);
-        }
+        $this->services->add($services);
+        $this->commands->add($commands);
     }
 
     /**
@@ -88,10 +97,10 @@ class Container
      */
     public function getParameter($name)
     {
-        if (!isset($this->parameters[$name])) {
+        if (!isset($this->parameters->get($name))) {
             throw new \Exception(sprintf('Parameter "%s" is undefined', $name));
         }
 
-        return $this->parameters[$name];
+        return $this->parameters->get($name);
     }
 }

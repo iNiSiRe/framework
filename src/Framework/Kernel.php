@@ -69,11 +69,11 @@ class Kernel
     public function runCommand()
     {
         $application = new Application();
-        $helperSet = new HelperSet(['container' => $this->container]);
-        $application->setHelperSet($helperSet);
-        $application->addCommands([
-            new UpdateSchemaCommand()
-        ]);
+        $application->setHelperSet(new HelperSet(['container' => $this->container]));
+        foreach ($this->container->commands->all() as $name => $class) {
+            $command = new $class;
+            $application->add($command);
+        }
         $application->run();
     }
 }
