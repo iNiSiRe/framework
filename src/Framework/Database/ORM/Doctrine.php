@@ -11,10 +11,10 @@ namespace Framework\Database\ORM;
 use Doctrine\Common\Cache\MemcachedCache;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
-use Framework\DependencyInjection\Container\ServiceLoader;
-use Framework\Foundation\Dictionary;
+use Framework\DependencyInjection\Container\Container;
+use Framework\DependencyInjection\Container\Service;
 
-class Doctrine extends ServiceLoader
+class Doctrine extends Service
 {
     protected $configSection = 'doctrine';
 
@@ -33,29 +33,11 @@ class Doctrine extends ServiceLoader
         return $this->entityManager;
     }
 
-    /**
-     * @return Dictionary
-     */
-    private function getConfiguration()
+    public function __construct(Container $container, array $configuration)
     {
-        $configuration = $this->container->getConfiguration($this->configSection);
-        foreach ($this->requiredParameters as $required) {
-            if (!isset($configuration[$required])) {
-                throw new \InvalidArgumentException('Service "%s" has required configuration parameter "%s"', get_class($this), $required);
-            }
-        }
+        parent::__construct($container, $configuration);
 
-        return new Dictionary($configuration);
-    }
-
-    /**
-     * @return mixed
-     */
-    public function load()
-    {
-        $configuration = $this->getConfiguration();
-
-        $isCacheEnabled = $configuration->get('cache');
+        $isCacheEnabled = isset($this->configuration['cache']) ? $this->configuration['cache'] : false;
         if ($isCacheEnabled) {
             $memcached = $this->container->get('memcached');
             $cache = new MemcachedCache();
@@ -67,14 +49,12 @@ class Doctrine extends ServiceLoader
         $config = Setup::createAnnotationMetadataConfiguration([ROOT_DIR . "/src"], true, ROOT_DIR . '/cache/doctrine/proxy', $cache);
 
         $connection = array(
-            'driver'   => $configuration->get('driver'),
-            'user'     => $configuration->get('user'),
-            'password' => $configuration->get('password'),
-            'dbname'   => $configuration->get('dbname'),
+            'driver'   => $this->configuration['driver'],
+            'user'     => $this->configuration['user'],
+            'password' => $this->configuration['password'],
+            'dbname'   => $this->configuration['dbname'],
         );
 
         $this->entityManager = EntityManager::create($connection, $config);
-
-        return $this;
     }
 }

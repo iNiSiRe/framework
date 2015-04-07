@@ -2,14 +2,14 @@
 
 namespace Framework\Controller;
 
-use Framework\DependencyInjection\ContainerService;
+use Framework\DependencyInjection\Container\Service;
 
 /**
  * Class Controller
  *
  * @package Framework\Core
  */
-class Controller extends ContainerService
+class Controller extends Service
 {
     public function render($template, $context = [])
     {

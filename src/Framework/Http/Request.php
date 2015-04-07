@@ -33,12 +33,12 @@ class Request
     /**
      * @var array
      */
-    private $query;
+    public $query;
 
     /**
      * @var array
      */
-    private $headers;
+    public $headers;
 
     /**
      * @var string
@@ -71,7 +71,7 @@ class Request
     {
         $this->method = $method;
         $this->uri = $uri;
-        $this->query = $query;
+        $this->query = new Dictionary($query);
         $this->headers = new Dictionary($headers);
         $this->version = $version;
         $this->setClientIp();
