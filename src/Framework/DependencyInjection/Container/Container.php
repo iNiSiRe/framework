@@ -41,19 +41,16 @@ class Container
         $this->environment = $environment;
         $this->parameters = new Dictionary();
         $this->services = new Dictionary();
-        $this->commands = new Dictionary();
-        $this->compile($configuration);
+        $this->configuration = new Dictionary($configuration);
+        $this->compile();
     }
 
-    public function compile($configuration)
+    public function compile()
     {
-        $parameters = isset($configuration[self::SECTION_PARAMETERS]) ? $configuration[self::SECTION_PARAMETERS] : [];
-        $services = isset($configuration[self::SECTION_SERVICES]) ? $configuration[self::SECTION_SERVICES] : [];
-        $commands = isset($configuration[self::SECTION_COMMANDS]) ? $configuration[self::SECTION_COMMANDS] : [];
-
+        $parameters = $this->configuration->get(self::SECTION_PARAMETERS, []);
+        $services = $this->configuration->get(self::SECTION_SERVICES, []);
         $this->parameters->add($parameters);
         $this->services->add($services);
-        $this->commands->add($commands);
     }
 
     /**

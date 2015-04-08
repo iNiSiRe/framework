@@ -10,6 +10,10 @@ use Symfony\Component\Console\Helper\HelperSet;
 
 class Command extends Service
 {
+    protected $configSection = 'commands';
+
+    protected $requiredParameters = [];
+
     private $application;
 
     public function __construct(Container $container, array $configuration)

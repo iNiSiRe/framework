@@ -14,24 +14,23 @@ services:
   database.migrations:
     class: Framework\Database\Migrations
 
-configuration:
-  memcached:
-    host: 127.0.0.1
-    port: 11211
+memcached:
+  host: 127.0.0.1
+  port: 11211
 
-  twig:
-    debug: true
-    paths: /
+twig:
+  debug: true
+  paths: /
 
-  doctrine:
-    driver: pdo_mysql
-    user: default
-    password: default
-    dbname: default
+doctrine:
+  driver: pdo_mysql
+  user: default
+  password: default
+  dbname: default
 
-  router:
-    routing:
-      framework_routing:
+router:
+  routing:
+    framework_routing:
 
 commands:
   doctrine_schema_update: Framework\Database\ORM\Doctrine\Command\UpdateSchemaCommand

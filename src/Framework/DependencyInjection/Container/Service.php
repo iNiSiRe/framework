@@ -14,6 +14,16 @@ abstract class Service implements ServiceInterface
      */
     protected $configuration;
 
+    protected function configure()
+    {
+
+    }
+
+    protected function initialize()
+    {
+
+    }
+
     /**
      * @param Container $container
      */
