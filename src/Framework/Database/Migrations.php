@@ -2,8 +2,8 @@
 
 namespace Framework\Database;
 
-use Framework\DependencyInjection\ContainerService;
-use Framework\DependencyInjection\Container;
+use Framework\DependencyInjection\Container\Container;
+use Framework\DependencyInjection\Container\Service;
 
 /**
  * Database migrations logic
@@ -12,7 +12,7 @@ use Framework\DependencyInjection\Container;
  *
  * @package Framework\Core\Database
  */
-class Migrations extends ContainerService
+class Migrations extends Service
 {
     /**
      * @var string

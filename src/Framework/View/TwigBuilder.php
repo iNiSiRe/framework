@@ -1,22 +1,15 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Pride
- * Date: 3/22/2015
- * Time: 11:00 PM
- */
 
 namespace Framework\View;
 
+use Framework\DependencyInjection\Container\ServiceBuilder;
 
-use Framework\DependencyInjection\Container\ServiceLoader;
-
-class TwigLoader extends ServiceLoader
+class TwigBuilder extends ServiceBuilder
 {
     /**
      * @return mixed
      */
-    public function load()
+    public function build()
     {
         $twigLoader = new \Twig_Loader_Filesystem(APPLICATION_DIR);
 

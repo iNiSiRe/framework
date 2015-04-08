@@ -24,7 +24,7 @@ configuration:
     paths: /
 
   doctrine:
-    driver: mysql_pdo
+    driver: pdo_mysql
     user: default
     password: default
     dbname: default
@@ -34,14 +34,4 @@ configuration:
       framework_routing:
 
 commands:
-  database.migrations.migrate:
-    class: Framework\Database\Command\MigrateCommand:migrate
-
-  database.migrations.status:
-    class: Framework\Database\Command\MigrateCommand:status
-
-  database.migrations.generate:
-    class: Framework\Database\Command\MigrateCommand:generate
-
-  doctrine:
-    class: Framework\Database\Command\MigrateCommand:schema
+  doctrine_schema_update: Framework\Database\ORM\Doctrine\Command\UpdateSchemaCommand

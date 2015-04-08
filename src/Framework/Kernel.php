@@ -5,13 +5,11 @@ namespace Framework;
 use Composer\Autoload\ClassLoader;
 use Framework\Configuration\ConfigurationLoader;
 use Framework\DependencyInjection\Container\Container;
+use Framework\DependencyInjection\Container\ContainerHelper;
 use Framework\Http\Response;
-use Framework\Router\Route;
-use Framework\Router\Router;
 use Framework\Http\Request;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Helper\HelperSet;
-use Symfony\Component\Yaml\Yaml;
 
 class Kernel
 {
@@ -27,8 +25,8 @@ class Kernel
     private $container;
 
     /**
-     * @param $environment
-     * @param $configurationFile
+     * @param     $environment
+     * @param     $configurationFile
      */
     public function __construct($environment, $configurationFile)
     {
@@ -67,12 +65,6 @@ class Kernel
 
     public function runCommand()
     {
-        $application = new Application();
-        $application->setHelperSet(new HelperSet(['container' => $this->container]));
-        foreach ($this->container->commands->all() as $name => $class) {
-            $command = new $class;
-            $application->add($command);
-        }
-        $application->run();
+
     }
 }

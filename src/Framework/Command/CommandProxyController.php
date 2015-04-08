@@ -9,10 +9,6 @@ class CommandProxyController extends Controller
 {
     public function runAction(Request $request)
     {
-        $command = $request->query->get('command');
-
-        if ($command) {
-            $input = new I
-        }
+        $input = $request->query->get('input');
     }
 }

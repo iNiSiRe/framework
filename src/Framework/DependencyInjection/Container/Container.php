@@ -88,7 +88,7 @@ class Container
         return $this->services->get($name);
     }
 
-    /**
+    /**;
      * @param $name
      *
      * @return mixed
@@ -97,7 +97,7 @@ class Container
      */
     public function getParameter($name)
     {
-        if (!isset($this->parameters->get($name))) {
+        if (!$this->parameters->get($name)) {
             throw new \Exception(sprintf('Parameter "%s" is undefined', $name));
         }
 
