@@ -53,6 +53,24 @@ class Container
         $this->services->add($services);
     }
 
+    private function initializeServiceInstance($class)
+    {
+        $instance = new $class;
+
+        if (!$instance instanceof Service) {
+            throw new \Exception(sprintf('Service "%s" should be instance of "%s"', $name, Service::class));
+        }
+
+        $instance->setContainer($this);
+        $instance->setConfiguration($this->configuration->get($instance::$name));
+
+        if ($instance instanceof ServiceBuilder) {
+            $instance = $instance->build();
+        }
+
+        return $instance;
+    }
+
     /**
      * @param $name
      *
@@ -69,16 +87,7 @@ class Container
             $definition = $this->services->get($name);
             $class = $definition['class'];
             $configuration = isset($definition['configuration']) ? $definition['configuration'] : [];
-            $instance = new $class($this, $configuration);
-
-            if ($instance instanceof ServiceBuilder) {
-                $instance = $instance->build();
-            }
-
-            if (!$instance instanceof Service) {
-                throw new \Exception(sprintf('Service "%s" should be instance of "%s"', $name, Service::class));
-            }
-
+            $instance = $this->initializeServiceInstance($class);
             $this->services->set($name, $instance);
         }
 

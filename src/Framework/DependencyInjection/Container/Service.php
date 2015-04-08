@@ -4,22 +4,21 @@ namespace Framework\DependencyInjection\Container;
 
 abstract class Service implements ServiceInterface
 {
+    public static $name = null;
+
+    public static $requiredParameters = [];
+
     /**
      * @var Container
      */
     protected $container;
 
-    /**
-     * @var array
-     */
-    protected $configuration;
-
-    protected function configure()
+    public function configure()
     {
 
     }
 
-    protected function initialize()
+    public function initialize()
     {
 
     }
