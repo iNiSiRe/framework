@@ -2,20 +2,36 @@
 
 namespace Framework\DependencyInjection\Container;
 
+use Framework\DependencyInjection\Exception\MissingRequiredParameter;
+use Framework\Foundation\Dictionary;
+
 abstract class Service implements ServiceInterface
 {
-    public static $name = null;
-
-    public static $requiredParameters = [];
+    protected $requiredParameters = [];
 
     /**
      * @var Container
      */
     protected $container;
 
-    public function configure()
-    {
+    /**
+     * @var Dictionary
+     */
+    protected $configuration;
 
+    /**
+     * @param array $configuration
+     *
+     * @throws MissingRequiredParameter
+     */
+    public function configure(array $configuration)
+    {
+        foreach ($this->requiredParameters as $parameter) {
+            if (!isset($configuration[$parameter])) {
+                throw new MissingRequiredParameter(sprintf('Required parameter "%s" should be passed to service "%s"', $parameter, self::class));
+            }
+            $this->configuration->set($parameter, $configuration[$parameter]);
+        }
     }
 
     public function initialize()
@@ -31,14 +47,8 @@ abstract class Service implements ServiceInterface
         $this->container = $container;
     }
 
-    public function setConfiguration(array $configuration)
+    public function __construct()
     {
-        $this->configuration = $configuration;
-    }
-
-    public function __construct(Container $container, array $configuration)
-    {
-        $this->setContainer($container);
-        $this->setConfiguration($configuration);
+        $this->configuration = new Dictionary();
     }
 }

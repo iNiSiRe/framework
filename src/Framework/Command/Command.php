@@ -23,7 +23,7 @@ class Command extends Service
         $this->initialize();
     }
 
-    private function initialize()
+    public function initialize()
     {
         $application = new Application();
         $application->setHelperSet(new HelperSet(['container' => new ContainerHelper($this->container)]));
@@ -37,6 +37,6 @@ class Command extends Service
 
     public function run()
     {
-        $application->run();
+        $this->application->run();
     }
 }

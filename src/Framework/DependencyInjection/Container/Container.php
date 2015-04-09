@@ -3,6 +3,7 @@
 namespace Framework\DependencyInjection\Container;
 
 use Framework\Configuration\ConfigurationLoader;
+use Framework\DependencyInjection\Exception\NotInstanceOfServiceException;
 use Framework\Foundation\Dictionary;
 use Framework\Kernel;
 
@@ -53,16 +54,17 @@ class Container
         $this->services->add($services);
     }
 
-    private function initializeServiceInstance($class)
+    private function createServiceInstance($class, $configuration)
     {
         $instance = new $class;
 
         if (!$instance instanceof Service) {
-            throw new \Exception(sprintf('Service "%s" should be instance of "%s"', $name, Service::class));
+            throw new NotInstanceOfServiceException;
         }
 
         $instance->setContainer($this);
-        $instance->setConfiguration($this->configuration->get($instance::$name));
+        $instance->configure($configuration);
+        $instance->initialize();
 
         if ($instance instanceof ServiceBuilder) {
             $instance = $instance->build();
@@ -86,8 +88,14 @@ class Container
         if (!$this->services->get($name) instanceof Service) {
             $definition = $this->services->get($name);
             $class = $definition['class'];
-            $configuration = isset($definition['configuration']) ? $definition['configuration'] : [];
-            $instance = $this->initializeServiceInstance($class);
+
+            try {
+                $configuration = $this->configuration->get($name, []);
+                $instance = $this->createServiceInstance($class, $configuration);
+            } catch (NotInstanceOfServiceException $e) {
+                throw new \Exception(sprintf('Service "%s" should be instance of "%s", instance of "%s" given', $name, Service::class, $class));
+            }
+
             $this->services->set($name, $instance);
         }
 

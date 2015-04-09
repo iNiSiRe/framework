@@ -16,9 +16,7 @@ use Framework\DependencyInjection\Container\Service;
 
 class Doctrine extends Service
 {
-    protected $configSection = 'doctrine';
-
-    protected $requiredParameters = ['driver', 'user', 'password', 'dbname'];
+    protected $requiredParameters = ['driver', 'user', 'password', 'dbname', 'cache'];
 
     /**
      * @var EntityManager
@@ -33,12 +31,9 @@ class Doctrine extends Service
         return $this->entityManager;
     }
 
-    public function __construct(Container $container, array $configuration)
+    public function initialize()
     {
-        parent::__construct($container, $configuration);
-
-        $isCacheEnabled = isset($this->configuration['cache']) ? $this->configuration['cache'] : false;
-        if ($isCacheEnabled) {
+        if ($this->configuration->get('cache')) {
             $memcached = $this->container->get('memcached');
             $cache = new MemcachedCache();
             $cache->setMemcached($memcached);
@@ -49,10 +44,10 @@ class Doctrine extends Service
         $config = Setup::createAnnotationMetadataConfiguration([ROOT_DIR . "/src"], true, ROOT_DIR . '/cache/doctrine/proxy', $cache);
 
         $connection = array(
-            'driver'   => $this->configuration['driver'],
-            'user'     => $this->configuration['user'],
-            'password' => $this->configuration['password'],
-            'dbname'   => $this->configuration['dbname'],
+            'driver'   => $this->configuration->get('driver'),
+            'user'     => $this->configuration->get('user'),
+            'password' => $this->configuration->get('password'),
+            'dbname'   => $this->configuration->get('dbname'),
         );
 
         $this->entityManager = EntityManager::create($connection, $config);

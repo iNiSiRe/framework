@@ -27,10 +27,10 @@ doctrine:
   user: default
   password: default
   dbname: default
+  cache: false
 
-router:
-  routing:
-    framework_routing:
+routes:
+
 
 commands:
   doctrine_schema_update: Framework\Database\ORM\Doctrine\Command\UpdateSchemaCommand
