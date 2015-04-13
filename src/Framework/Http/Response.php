@@ -11,22 +11,22 @@ class Response
     /**
      * @var Cookie[]
      */
-    private $cookies = [];
+    protected $cookies = [];
 
     /**
      * @var string
      */
-    private $body;
+    protected $body;
 
     /**
      * @var array
      */
-    private $headers;
+    protected $headers;
 
     /**
      * @var int
      */
-    private $statusCode;
+    protected $statusCode;
 
     /**
      * @param string $body
@@ -41,7 +41,7 @@ class Response
     }
 
 
-    private function complete()
+    protected function complete()
     {
         $setCookieHeader = '';
         foreach ($this->cookies as $cookie) {

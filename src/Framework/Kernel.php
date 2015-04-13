@@ -2,14 +2,18 @@
 
 namespace Framework;
 
+use Application\ApplicationModule;
 use Composer\Autoload\ClassLoader;
 use Framework\Configuration\ConfigurationLoader;
 use Framework\DependencyInjection\Container\Container;
-use Framework\DependencyInjection\Container\ContainerHelper;
 use Framework\Http\Response;
 use Framework\Http\Request;
-use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Helper\HelperSet;
+use Framework\Module\Administration\AdministrationModule;
+use Framework\Module\Console\ConsoleModule;
+use Framework\Module\Doctrine\DoctrineModule;
+use Framework\Module\Memcached\MemcachedModule;
+use Framework\Module\Router\RouterModule;
+use Framework\Module\Twig\TwigModule;
 
 class Kernel
 {
@@ -25,13 +29,33 @@ class Kernel
     private $container;
 
     /**
+     * @var Module[]
+     */
+    private $modules;
+
+    /**
      * @param     $environment
      * @param     $configurationFile
      */
     public function __construct($environment, $configurationFile)
     {
         $loader = new ConfigurationLoader();
-        $loader->addFiles([__DIR__ . '/Resources/config.yml', $configurationFile]);
+
+        $this->modules = [
+            new MemcachedModule(),
+            new RouterModule(),
+            new DoctrineModule(),
+            new TwigModule(),
+            new ConsoleModule(),
+            new AdministrationModule(),
+            new ApplicationModule()
+        ];
+
+        foreach ($this->modules as $module)
+        {
+            $loader->addFiles($module->getConfigurations());
+        }
+        
         $this->container = new Container($environment, $loader->load());
     }
 
@@ -45,12 +69,9 @@ class Kernel
     public function handleRequest(Request $request)
     {
         try {
-            $handler = $this->container->get('router')->getHandler($request);
-            $arguments = [$request];
-            $response = call_user_func_array($handler, $arguments);
+            $response = $this->container->get('router')->handle($request);
         } catch (\Exception $e) {
-
-            $errorBody = sprintf('Uncaught exception "%s" with message "%s" in file "%s" on line %s',
+            $errorBody = sprintf('Uncaught "%s" with message "%s" in file "%s" on line %s',
                 get_class($e),
                 $e->getMessage(),
                 $e->getFile(),
@@ -65,6 +86,6 @@ class Kernel
 
     public function runCommand()
     {
-
+        $this->container->get('command')->run();
     }
 }

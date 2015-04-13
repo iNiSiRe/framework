@@ -1,0 +1,12 @@
+services:
+  doctrine: Framework\Module\Doctrine\Doctrine
+
+commands:
+  doctrine_schema_update: Framework\Module\Doctrine\Command\UpdateSchemaCommand
+
+doctrine:
+  driver: pdo_mysql
+  user: default
+  password: default
+  dbname: default
+  cache: false

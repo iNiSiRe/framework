@@ -1,0 +1,15 @@
+routes:
+  administration_list:
+    pattern: /admin/(\w+)/list
+    handler: Framework\Module\Administration\Controller\CRUDController:list
+
+  administration_create:
+    methods: [GET, POST]
+    pattern: /admin/(\w+)/create
+    handler: Framework\Module\Administration\Controller\CRUDController:create
+
+extensions:
+  administration_menu: Framework\Module\Administration\Extension\Menu
+
+services:
+  administration: Framework\Module\Administration\Administration

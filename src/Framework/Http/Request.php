@@ -88,8 +88,10 @@ class Request
     private function getCookiesFromHeader(Dictionary $headers)
     {
         $cookies = new Dictionary();
-        foreach (explode(';', $headers->get('Cookie')) as $rawCookie) {
-            list ($key, $value) = explode('=', $rawCookie);
+        $header = $headers->get('Cookie', '');
+        $rawCookies = !empty($header) ? explode(';', $header) : [];
+        foreach ($rawCookies as $cookie) {
+            list ($key, $value) = explode('=', $cookie);
             $cookies->set($key, $value);
         }
 

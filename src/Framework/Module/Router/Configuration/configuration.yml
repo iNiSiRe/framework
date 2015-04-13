@@ -1,0 +1,5 @@
+services:
+  router: Framework\Module\Router\Router
+
+extensions:
+  router: Framework\Module\Router\Extension\RouterExtension

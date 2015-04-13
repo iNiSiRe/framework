@@ -1,0 +1,6 @@
+services:
+  memcached: Framework\Cache\MemcachedBuilder
+
+memcached:
+  host: 127.0.0.1
+  port: 11211

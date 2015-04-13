@@ -26,12 +26,12 @@ class Container
     /**
      * @var Dictionary
      */
-    public $commands;
+    public $configuration;
 
     /**
      * @var int
      */
-    private $environment;
+    public $environment;
 
     /**
      * @param int   $environment
@@ -85,9 +85,8 @@ class Container
             throw new \Exception(sprintf('Service "%s" is undefined', $name));
         }
 
-        if (!$this->services->get($name) instanceof Service) {
-            $definition = $this->services->get($name);
-            $class = $definition['class'];
+        if (!is_object($this->services->get($name))) {
+            $class = $this->services->get($name);
 
             try {
                 $configuration = $this->configuration->get($name, []);

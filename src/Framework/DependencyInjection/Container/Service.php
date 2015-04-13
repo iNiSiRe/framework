@@ -7,6 +7,8 @@ use Framework\Foundation\Dictionary;
 
 abstract class Service implements ServiceInterface
 {
+    public static $import = [];
+
     protected $requiredParameters = [];
 
     /**

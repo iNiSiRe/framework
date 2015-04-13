@@ -1,0 +1,8 @@
+routes:
+  console_run:
+    method: GET
+    pattern: /console/run
+    handler: Framework\Module\Console\ConsoleProxyController:run
+
+services:
+  console: Framework\Module\Console\Console
