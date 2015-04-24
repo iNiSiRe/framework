@@ -22,9 +22,9 @@ class UpdateSchemaCommand extends UpdateCommand
     protected function configure()
     {
         parent::configure();
-        $this
-            ->setName('doctrine:schema:update')
-            ->addOption('em', null, InputOption::VALUE_OPTIONAL, 'The entity manager to use for this command');
+//        $this
+//            ->setName('doctrine:schema:update')
+//            ->addOption('em', null, InputOption::VALUE_OPTIONAL, 'The entity manager to use for this command');
     }
     /**
      * {@inheritDoc}

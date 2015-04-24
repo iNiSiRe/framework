@@ -16,6 +16,9 @@ class Console extends Service
      */
     private $application;
 
+    /**
+     *
+     */
     public function initialize()
     {
         $commands = $this->container->configuration->get('commands', []);
@@ -30,9 +33,21 @@ class Console extends Service
         $this->application = $application;
     }
 
+    /**
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     */
     public function run(InputInterface $input = null, OutputInterface $output = null)
     {
         $this->application->setAutoExit(false);
         $this->application->run($input, $output);
+    }
+
+    /**
+     * @return Application
+     */
+    public function getApplication()
+    {
+        return $this->application;
     }
 }
