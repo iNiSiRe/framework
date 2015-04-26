@@ -3,10 +3,12 @@
 namespace Framework\Module\Doctrine;
 
 use Doctrine\Common\Cache\MemcachedCache;
+use Doctrine\DBAL\Tools\Console\Helper\ConnectionHelper;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Console\Command\SchemaTool\CreateCommand;
 use Doctrine\ORM\Tools\Console\Command\SchemaTool\DropCommand;
 use Doctrine\ORM\Tools\Console\Command\SchemaTool\UpdateCommand;
+use Doctrine\ORM\Tools\Console\Helper\EntityManagerHelper;
 use Doctrine\ORM\Tools\Setup;
 use Framework\DependencyInjection\Container\Service;
 use Framework\Module\Console\Console;
@@ -14,7 +16,7 @@ use Framework\Module\Doctrine\Command\DoctrineCommandHelper;
 
 class Doctrine extends Service
 {
-    protected $requiredParameters = ['driver', 'user', 'password', 'dbname', 'cache'];
+    protected $requiredParameters = ['driver', 'user', 'password', 'dbname', 'cache', 'host'];
 
     /**
      * @var EntityManager
@@ -52,6 +54,7 @@ class Doctrine extends Service
             'user'     => $this->configuration->get('user'),
             'password' => $this->configuration->get('password'),
             'dbname'   => $this->configuration->get('dbname'),
+            'host' => $this->configuration->get('host')
         );
 
         $this->entityManager = EntityManager::create($connection, $config);
@@ -62,7 +65,11 @@ class Doctrine extends Service
         /** @var Console $console */
         $console = $this->container->get('console');
 
-        DoctrineCommandHelper::setApplicationEntityManager($console->getApplication(), null);
+//        DoctrineCommandHelper::setApplicationEntityManager($console->getApplication(), null);
+
+        $helperSet = $console->getApplication()->getHelperSet();
+        $helperSet->set(new ConnectionHelper($this->getManager()->getConnection()), 'db');
+        $helperSet->set(new EntityManagerHelper($this->getManager()), 'em');
 
         $console->getApplication()->addCommands([
             new UpdateCommand(),

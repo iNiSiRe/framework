@@ -4,6 +4,7 @@ namespace Framework;
 
 use Application\ApplicationModule;
 use Composer\Autoload\ClassLoader;
+use Doctrine\ORM\EntityManager;
 use Framework\Configuration\ConfigurationLoader;
 use Framework\DependencyInjection\Container\Container;
 use Framework\Http\Response;
@@ -70,6 +71,12 @@ class Kernel
     {
         try {
             $response = $this->container->get('router')->handle($request);
+
+            // Clear Doctrine cache
+            /** @var EntityManager $em */
+            $em = $this->container->get('doctrine')->getManager();
+            $em->getUnitOfWork()->clear();
+
         } catch (\Exception $e) {
             $errorBody = sprintf('Uncaught "%s" with message "%s" in file "%s" on line %s',
                 get_class($e),

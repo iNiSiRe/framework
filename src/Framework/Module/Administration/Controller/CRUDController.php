@@ -2,6 +2,7 @@
 
 namespace Framework\Module\Administration\Controller;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 use Framework\Module\Administration\Page;
 use Framework\Controller\Controller;
@@ -136,13 +137,31 @@ class CRUDController extends Controller
 
                 switch (true) {
                     case ($metadata->getTypeOfField($name) !== null) :
-                        $item->$name = $value;
+                        $setter = 'set' . ucfirst($name);
+                        if (method_exists($item, $setter)) {
+                            $item->$setter($value);
+                        }
                         break;
 
                     case ($metadata->getAssociationTargetClass($name) !== null) :
-                        $class = $metadata->getAssociationTargetClass($name);
-                        $entity = $em->getRepository($class)->find($value);
-                        $item->$name = $entity;
+                        $association = $metadata->getAssociationMapping($name);
+                        $targetClass = $association['targetEntity'];
+                        $inversedBy = $association['inversedBy'];
+                        $entity = $em->getRepository($targetClass)->find($value);
+
+                        $setter = 'set' . ucfirst($name);
+                        if (method_exists($item, $setter)) {
+                            $item->$setter($entity);
+                        }
+
+//                        $collectionGetter = 'get' . ucfirst($inversedBy);
+//                        if (method_exists($entity, $collectionGetter)) {
+//                            /** @var ArrayCollection $items */
+//                            $items = $entity->$collectionGetter();
+//                            $items->add($item);
+//                        }
+//
+//                        $em->persist($entity);
 
                         break;
 

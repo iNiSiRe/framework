@@ -1,5 +1,5 @@
 services:
-  memcached: Framework\Cache\MemcachedBuilder
+  memcached: Framework\Module\Memcached\MemcachedBuilder
 
 memcached:
   host: 127.0.0.1
