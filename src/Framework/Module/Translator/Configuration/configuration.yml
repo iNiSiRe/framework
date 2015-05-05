@@ -1,2 +1,5 @@
 services:
   translator: Framework\Module\Translator\TranslatorBuilder
+
+extensions:
+  translator: Framework\Module\Translator\Extension\TranslatorExtension

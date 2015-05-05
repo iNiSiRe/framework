@@ -14,6 +14,7 @@ use Framework\Module\Console\ConsoleModule;
 use Framework\Module\Doctrine\DoctrineModule;
 use Framework\Module\Memcached\MemcachedModule;
 use Framework\Module\Router\RouterModule;
+use Framework\Module\Translator\TranslatorModule;
 use Framework\Module\Twig\TwigModule;
 
 class Kernel
@@ -46,6 +47,7 @@ class Kernel
             new MemcachedModule(),
             new RouterModule(),
             new DoctrineModule(),
+            new TranslatorModule(),
             new TwigModule(),
             new ConsoleModule(),
             new AdministrationModule(),

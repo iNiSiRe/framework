@@ -2,7 +2,6 @@
 
 namespace Framework\Module\Translator\Extension;
 
-use Framework\Module\Router\Router;
 use Framework\Module\Twig\Extension;
 use Symfony\Component\Translation\Translator;
 
@@ -14,8 +13,22 @@ class TranslatorExtension extends Extension
         $translator = $this->container->get('translator');
 
         return [
-            new \Twig_SimpleFilter('translate', [$translator, 'trans']),
             new \Twig_SimpleFunction('translate', [$translator, 'trans'])
+        ];
+    }
+
+    /**
+     * Returns a list of filters to add to the existing list.
+     *
+     * @return array An array of filters
+     */
+    public function getFilters()
+    {
+        /** @var Translator $translator */
+        $translator = $this->container->get('translator');
+
+        return [
+            new \Twig_SimpleFilter('translate', [$translator, 'trans'])
         ];
     }
 
