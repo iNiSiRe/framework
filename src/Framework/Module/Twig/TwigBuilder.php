@@ -23,7 +23,7 @@ class TwigBuilder extends ServiceBuilder
             'debug' => true
         ]);
 
-        // Register extensions
+        // Register custom extensions
         $extensions = $this->container->configuration->get('extensions', []);
         foreach ($extensions as $class) {
             if (!class_exists($class)) {
