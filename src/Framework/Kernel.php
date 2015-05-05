@@ -76,7 +76,6 @@ class Kernel
             /** @var EntityManager $em */
             $em = $this->container->get('doctrine')->getManager();
             $em->getUnitOfWork()->clear();
-
         } catch (\Exception $e) {
             $errorBody = sprintf('Uncaught "%s" with message "%s" in file "%s" on line %s',
                 get_class($e),
