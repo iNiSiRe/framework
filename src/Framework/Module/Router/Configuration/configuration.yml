@@ -3,3 +3,6 @@ services:
 
 extensions:
   router: Framework\Module\Router\Extension\RouterExtension
+
+listeners:
+  kernel.request: Framework\Module\Router\Listener\RequestListener

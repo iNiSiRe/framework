@@ -4,18 +4,22 @@ namespace Framework;
 
 use Application\ApplicationModule;
 use Composer\Autoload\ClassLoader;
-use Doctrine\ORM\EntityManager;
 use Framework\Configuration\ConfigurationLoader;
 use Framework\DependencyInjection\Container\Container;
-use Framework\Http\Response;
 use Framework\Http\Request;
+use React\EventLoop\Factory;
+use React\Http\Request as ReactRequest;
+use React\Http\Response as ReactResponse;
 use Framework\Module\Administration\AdministrationModule;
 use Framework\Module\Console\ConsoleModule;
 use Framework\Module\Doctrine\DoctrineModule;
+use Framework\Module\EventDispatcher\EventDispatcher;
 use Framework\Module\Memcached\MemcachedModule;
 use Framework\Module\Router\RouterModule;
 use Framework\Module\Translator\TranslatorModule;
 use Framework\Module\Twig\TwigModule;
+use React\Http\Server as HttpServer;
+use React\Socket\Server;
 
 class Kernel
 {
@@ -24,6 +28,8 @@ class Kernel
 
     const ENV_DEV = 1;
     const ENV_PROD = 2;
+
+    const EVENT_REQUEST = 'request';
 
     /**
      * @var Container
@@ -62,34 +68,36 @@ class Kernel
         $this->container = new Container($environment, $loader->load());
     }
 
-    /**
-     * @param Request $request
-     *
-     * @return Response
-     *
-     * @throws \Exception
-     */
-    public function handleRequest(Request $request)
+    public function run()
     {
-        try {
-            $response = $this->container->get('router')->handle($request);
+        /** @var EventDispatcher $dispatcher */
+        $dispatcher = $this->container->get('dispatcher');
+        $dispatcher->dispatch(self::EVENT_REQUEST, []);
 
-            // Clear Doctrine cache
-            /** @var EntityManager $em */
-            $em = $this->container->get('doctrine')->getManager();
-            $em->getUnitOfWork()->clear();
-        } catch (\Exception $e) {
-            $errorBody = sprintf('Uncaught "%s" with message "%s" in file "%s" on line %s',
-                get_class($e),
-                $e->getMessage(),
-                $e->getFile(),
-                $e->getLine()
+        $loop = Factory::create();
+        $socket = new Server($loop);
+        $http = new HttpServer($socket);
+        $http->on('request', function (ReactRequest $reactRequest, ReactResponse $reactResponse) {
+
+            $request = new Request(
+                $reactRequest->getMethod(),
+                $reactRequest->getPath(),
+                $reactRequest->getQuery(),
+                $reactRequest->getHeaders(),
+                $reactRequest->getHttpVersion()
             );
 
-            $response = new Response($errorBody, ['Content-Type' => 'text/html'], 500);
-        }
+            $reactRequest->on('data', function ($data) use ($request, $reactResponse) {
+                $request->setBody($data);
+                $response = $kernel->handleRequest($request);
+                $reactResponse->writeHead($response->getStatusCode(), $response->getHeaders());
+                $reactResponse->end($response->getBody());
+            });
+        });
 
-        return $response;
+        $socket->listen(8080, '0.0.0.0');
+        echo 'Started';
+        $loop->run();
     }
 
     public function runCommand()
