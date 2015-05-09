@@ -7,6 +7,9 @@ use Composer\Autoload\ClassLoader;
 use Framework\Configuration\ConfigurationLoader;
 use Framework\DependencyInjection\Container\Container;
 use Framework\Http\Request;
+use Framework\Http\Response;
+use Framework\Module\EventDispatcher\EventDispatcherModule;
+use Framework\Module\HttpServer\HttpServerModule;
 use React\EventLoop\Factory;
 use React\Http\Request as ReactRequest;
 use React\Http\Response as ReactResponse;
@@ -50,6 +53,8 @@ class Kernel
         $loader = new ConfigurationLoader();
 
         $this->modules = [
+            new EventDispatcherModule(),
+            new HttpServerModule(),
             new MemcachedModule(),
             new RouterModule(),
             new DoctrineModule(),
@@ -70,38 +75,7 @@ class Kernel
 
     public function run()
     {
-        /** @var EventDispatcher $dispatcher */
-        $dispatcher = $this->container->get('dispatcher');
-        $dispatcher->dispatch(self::EVENT_REQUEST, []);
-
-        $loop = Factory::create();
-        $socket = new Server($loop);
-        $http = new HttpServer($socket);
-        $http->on('request', function (ReactRequest $reactRequest, ReactResponse $reactResponse) {
-
-            $request = new Request(
-                $reactRequest->getMethod(),
-                $reactRequest->getPath(),
-                $reactRequest->getQuery(),
-                $reactRequest->getHeaders(),
-                $reactRequest->getHttpVersion()
-            );
-
-            $reactRequest->on('data', function ($data) use ($request, $reactResponse) {
-                $request->setBody($data);
-                $response = $kernel->handleRequest($request);
-                $reactResponse->writeHead($response->getStatusCode(), $response->getHeaders());
-                $reactResponse->end($response->getBody());
-            });
-        });
-
-        $socket->listen(8080, '0.0.0.0');
-        echo 'Started';
-        $loop->run();
-    }
-
-    public function runCommand()
-    {
-        $this->container->get('command')->run();
+        $server = $this->container->get('http_server');
+        $server->run();
     }
 }

@@ -42,6 +42,6 @@ class RequestEventListener extends Service
             $response = new Response($errorBody, ['Content-Type' => 'text/html'], 500);
         }
 
-        return $response;
+        $request->emit('response', [$response]);
     }
 }

@@ -1,2 +1,2 @@
 services:
-  dispatcher: Framework\Module\EventDispatcher\EventDispatcher
+  event_dispatcher: Framework\Module\EventDispatcher\EventDispatcher

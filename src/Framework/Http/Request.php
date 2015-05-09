@@ -8,9 +8,10 @@
 
 namespace Framework\Http;
 
+use Evenement\EventEmitter;
 use Framework\Foundation\Dictionary;
 
-class Request
+class Request extends EventEmitter
 {
     const HEADER_CLIENT_IP = 1;
     const GET = 'GET';
@@ -194,5 +195,16 @@ class Request
     public function setBody($body)
     {
         $this->body = $body;
+    }
+
+    public static function createFromReactRequest(\React\Http\Request $request)
+    {
+        return new self(
+            $request->getMethod(),
+            $request->getPath(),
+            $request->getQuery(),
+            $request->getHeaders(),
+            $request->getHttpVersion()
+        );
     }
 }

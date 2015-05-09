@@ -15,26 +15,27 @@ class EventDispatcher extends Service
 {
     public function __construct()
     {
-        $this->processor = new EventEmitter();
+        $this->scope = new EventEmitter();
     }
 
     public function initialize()
     {
         $listeners = $this->container->configuration->get('listeners', []);
 
-        foreach ($listeners as $listener)
+        foreach ($listeners as $event => $listener)
         {
-
+            list($service, $method) = explode(':', $listener);
+            $this->listen($event, [$this->container->get($service), $method]);
         }
     }
 
     public function dispatch($event, $arguments = [])
     {
-        $this->processor->emit($event, $arguments);
+        $this->scope->emit($event, $arguments);
     }
 
     public function listen($event, callable $listener)
     {
-        $this->processor->on($event, $listener);
+        $this->scope->on($event, $listener);
     }
 }

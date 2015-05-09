@@ -2,15 +2,15 @@
 /**
  * Created by PhpStorm.
  * User: inisire
- * Date: 08.05.15
- * Time: 16:32
+ * Date: 09.05.15
+ * Time: 21:30
  */
 
-namespace Framework\Module\EventDispatcher;
+namespace Framework\Module\HttpServer;
 
 use Framework\Module;
 
-class EventDispatcherModule extends Module
+class HttpServerModule extends Module
 {
     public function getConfigurations()
     {

@@ -1,8 +1,9 @@
 services:
   router: Framework\Module\Router\Router
+  request_listener: Framework\Module\Router\Listener\RequestEventListener
 
 extensions:
   router: Framework\Module\Router\Extension\RouterExtension
 
 listeners:
-  kernel.request: Framework\Module\Router\Listener\RequestListener
+  request: request_listener:onRequest
