@@ -82,6 +82,23 @@ class CRUDController extends Controller
         return $choices;
     }
 
+    private function defineFieldType($metadata, $field, &$options)
+    {
+        switch (true) {
+            case ($metadata->getTypeOfField($field) !== null) :
+                $options['type'] = $metadata->getTypeOfField($field);
+                break;
+
+            case ($metadata->getAssociationTargetClass($field) !== null) :
+                $class = $metadata->getAssociationTargetClass($field);
+
+                $options['type'] = 'choice';
+                $options['choices'] = $this->getEntityChoices($class);
+
+                break;
+        }
+    }
+
     public function createAction(Request $request, $pageName)
     {
         /** @var Page $page */
@@ -99,30 +116,13 @@ class CRUDController extends Controller
         $editFields = $page->getEditFields();
 
         $formFields = [];
-        foreach ($editFields as $field) {
+        foreach ($editFields as $field => $options) {
 
-            switch (true) {
-                case ($metadata->getTypeOfField($field) !== null) :
-                    $fieldOptions = [
-                        'type' => $metadata->getTypeOfField($field)
-                    ];
-                    break;
-
-                case ($metadata->getAssociationTargetClass($field) !== null) :
-                    $class = $metadata->getAssociationTargetClass($field);
-
-                    $fieldOptions = [
-                        'type' => 'choice',
-                        'choices' => $this->getEntityChoices($class)
-                    ];
-
-                    break;
-
-                default:
-                    $fieldOptions = [];
+            if (!isset($options['type'])) {
+                $this->defineFieldType($metadata, $field, $options);
             }
 
-            $formFields[] = array_merge(['name' => $field], $fieldOptions);
+            $formFields[] = array_merge(['name' => $field], $options);
         }
 
         $fields = $formFields;

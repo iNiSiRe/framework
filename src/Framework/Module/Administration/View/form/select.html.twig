@@ -2,8 +2,8 @@
     <label for="select" class="col-sm-2 control-label">{{ field.name }}</label>
     <div class="col-sm-10">
         <select id="select" class="form-control" name="{{ field.name }}">
-            {% for choice in field.choices %}
-                <option value="{{ choice.value }}">{{ choice.name }}</option>
+            {% for id, value in field.choices %}
+                <option value="{{ id }}">{{ value }}</option>
             {% endfor %}
         </select>
     </div>
