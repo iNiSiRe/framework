@@ -32,7 +32,6 @@ class CRUDController extends Controller
 
         $formFields = [];
         foreach ($listFields as $field) {
-
             switch (true) {
                 case ($metadata->getTypeOfField($field) !== null) :
                     $fieldOptions = [
@@ -41,7 +40,6 @@ class CRUDController extends Controller
                     break;
 
                 case ($metadata->getAssociationTargetClass($field) !== null) :
-
                     $fieldOptions = [
                         'type' => 'entity'
                     ];
@@ -73,10 +71,7 @@ class CRUDController extends Controller
         $choices = [];
         foreach ($entities as $entity) {
             $name = method_exists($entity, '__toString') ? (string) $entity : '';
-            $choices[] = [
-                'value' => array_shift($metadata->getIdentifierValues($entity)),
-                'name' => $name
-            ];
+            $choices[array_shift($metadata->getIdentifierValues($entity))] = $name;
         }
 
         return $choices;

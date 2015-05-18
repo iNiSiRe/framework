@@ -3,7 +3,9 @@
 {% block content %}
     <form class="form-horizontal" action="{{ action }}" method="POST">
         {% for field in fields %}
-            {% if field.type == 'choice' %}
+            {% if field.type == 'checkbox' %}
+                {% include 'Framework/Module/Administration/View/form/checkbox.html.twig' with {'field': field} %}
+            {% elseif field.type == 'choice' %}
                 {% include 'Framework/Module/Administration/View/form/select.html.twig' with {'field': field} %}
             {% else %}
                 <div class="form-group">
