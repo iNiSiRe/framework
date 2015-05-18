@@ -12,6 +12,7 @@ use Framework\DependencyInjection\Container\Service;
 use Framework\Http\Request;
 use Framework\Http\Response;
 use Framework\Module\EventDispatcher\EventDispatcher;
+use Framework\Module\HttpServer\Provider\MultipartRequestProvider;
 use React\EventLoop\Factory;
 use React\Socket\Server;
 
@@ -57,7 +58,15 @@ class HttpServer extends Service
         $request = Request::createFromReactRequest($reactRequest);
 
         $reactRequest->on('data', function ($data) use ($request, $dispatcher) {
-            $request->setBody($data);
+            $contentType = $request->headers->get('Content-Type');
+
+            if (strpos($contentType, 'multipart') !== -1) {
+                $multipartProvider = new MultipartRequestProvider();
+                $data = $multipartProvider->process($contentType, $data);
+            } else {
+                $request->setBody($data);
+            }
+
             $dispatcher->dispatch('request', [$request]);
         });
 
