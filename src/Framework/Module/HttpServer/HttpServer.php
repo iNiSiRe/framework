@@ -57,14 +57,19 @@ class HttpServer extends Service
 
         $request = Request::createFromReactRequest($reactRequest);
 
-        $reactRequest->on('data', function ($data) use ($request, $dispatcher) {
-            $contentType = $request->headers->get('Content-Type');
+        $requestBody = null;
 
+        $reactRequest->on('data', function ($data) use (&$requestBody) {
+            $requestBody .= $data;
+        });
+
+        $reactRequest->on('end', function () use ($request, &$requestBody, $dispatcher) {
+            $contentType = $request->headers->get('Content-Type');
             if (strpos($contentType, 'multipart') !== -1) {
                 $multipartProvider = new MultipartRequestProvider();
-                $data = $multipartProvider->process($contentType, $data);
+                $data = $multipartProvider->process($contentType, $requestBody);
             } else {
-                $request->setBody($data);
+                $request->setBody($requestBody);
             }
 
             $dispatcher->dispatch('request', [$request]);
