@@ -94,6 +94,17 @@ class CRUDController extends Controller
         }
     }
 
+    public function transformValue($type, $value)
+    {
+        switch ($type) {
+            case 'boolean':
+                return $value == 'on';
+            break;
+        }
+
+        return $value;
+    }
+
     public function createAction(Request $request, $pageName)
     {
         /** @var Page $page */
@@ -128,7 +139,8 @@ class CRUDController extends Controller
             foreach ($fields as $field) {
 
                 $name = $field['name'];
-                $value = $data[$name];
+
+                $value = $this->transformValue($field['type'], $data[$name]);
 
                 switch (true) {
                     case ($metadata->getTypeOfField($name) !== null) :

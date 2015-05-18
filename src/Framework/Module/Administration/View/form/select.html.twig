@@ -1,7 +1,7 @@
 <div class="form-group">
-    <label for="select" class="col-sm-2 control-label">{{ field.name }}</label>
+    <label class="col-sm-2 control-label">{{ field.name }}</label>
     <div class="col-sm-10">
-        <select id="select" class="form-control" name="{{ field.name }}">
+        <select class="form-control" name="{{ field.name }}">
             {% for id, value in field.choices %}
                 <option value="{{ id }}">{{ value }}</option>
             {% endfor %}
