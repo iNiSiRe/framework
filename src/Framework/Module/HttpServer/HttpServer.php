@@ -9,12 +9,14 @@
 namespace Framework\Module\HttpServer;
 
 use Framework\DependencyInjection\Container\Service;
+use Framework\Http\ReactRequestHandler;
 use Framework\Http\Request;
 use Framework\Http\Response;
 use Framework\Module\EventDispatcher\EventDispatcher;
 use Framework\Module\HttpServer\Provider\MultipartRequestProvider;
 use React\EventLoop\Factory;
 use React\Socket\Server;
+use React\Stream\Stream;
 
 class HttpServer extends Service
 {
@@ -41,43 +43,16 @@ class HttpServer extends Service
         $this->loop = Factory::create();
         $this->socket = new Server($this->loop);
         $this->http = new \React\Http\Server($this->socket);
-        $this->http->on('request', [$this, 'onRequest']);
+        $this->http->on('request', [new ReactRequestHandler(), 'handle']);
         $this->socket->listen(8080, '0.0.0.0');
+
+        $request->on('end', function () use ($request, $dispatcher) {
+            $dispatcher->dispatch('request', [$request]);
+        });
     }
 
     public function run()
     {
         $this->loop->run();
-    }
-
-    public function onRequest(\React\Http\Request $reactRequest, \React\Http\Response $reactResponse)
-    {
-        /** @var EventDispatcher $dispatcher */
-        $dispatcher = $this->container->get('event_dispatcher');
-
-        $request = Request::createFromReactRequest($reactRequest);
-
-        $requestBody = null;
-
-        $reactRequest->on('data', function ($data) use (&$requestBody) {
-            $requestBody .= $data;
-        });
-
-        $reactRequest->on('end', function () use ($request, &$requestBody, $dispatcher) {
-            $contentType = $request->headers->get('Content-Type');
-            if (strpos($contentType, 'multipart') !== -1) {
-                $multipartProvider = new MultipartRequestProvider();
-                $data = $multipartProvider->process($contentType, $requestBody);
-            } else {
-                $request->setBody($requestBody);
-            }
-
-            $dispatcher->dispatch('request', [$request]);
-        });
-
-        $request->on('response', function (Response $response) use ($reactResponse) {
-            $reactResponse->writeHead($response->getStatusCode(), $response->getHeaders());
-            $reactResponse->end($response->getBody());
-        });
     }
 }

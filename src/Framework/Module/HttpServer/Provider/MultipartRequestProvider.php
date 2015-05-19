@@ -11,39 +11,78 @@ namespace Framework\Module\HttpServer\Provider;
 
 class MultipartRequestProvider
 {
-    public function process($contentType, $data)
+    protected function parseBoundary($header)
     {
-        preg_match('/boundary=(.*)$/', $contentType, $matches);
-        $boundary = $matches[1];
+        preg_match('#boundary=(.*)$#', $header, $matches);
 
-        // split content by boundary and get rid of last -- element
-        $a_blocks = preg_split("/-+$boundary/", $data);
-        array_pop($a_blocks);
+        return $matches[1];
+    }
 
-        // loop data blocks
-        $a_data = [];
-        foreach ($a_blocks as $id => $block)
-        {
-            if (empty($block))
-                continue;
-
-            // you'll have to var_dump $block to understand this and maybe replace \n or \r with a visibile char
-
-            // parse uploaded files
-            if (strpos($block, 'application/octet-stream') !== FALSE)
-            {
-                // match "name", then everything after "stream" (optional) except for prepending newlines
-                preg_match("/name=\"([^\"]*)\".*stream[\n|\r]+([^\n\r].*)?$/s", $block, $matches);
-            }
-            // parse all other fields
-            else
-            {
-                // match "name" and optional value in between newline sequences
-                preg_match('/name=\"([^\"]*)\"[\n|\r]+([^\n\r].*)?\r$/s', $block, $matches);
-            }
-            $a_data[$matches[1]] = $matches[2];
+    protected function parseBlock($string)
+    {
+        if (strpos($string, 'filename') !== false) {
+            $this->uploadFile($string);
+            return;
         }
 
-        return $a_data;
+        // This may never be called, if an octet stream
+        // has a filename it is catched by the previous
+        // condition already.
+//        if (strpos($string, 'application/octet-stream') !== false) {
+//            $this->octetStream($string);
+//            return;
+//        }
+
+        $this->parseRequestParameter($string);
+    }
+
+    protected function uploadFile($data)
+    {
+
+    }
+
+    protected function parseRequestParameter($data)
+    {
+
+    }
+
+    protected function parseData($boundary, $data)
+    {
+        $count = 0;
+        $data = preg_replace("/--$boundary--\r\n/", '', $data, -1, $count);
+
+        $isEnd = ($count == 1);
+
+        // split content by boundary and get rid of last -- element
+        $blocks = preg_split("#--$boundary\r\n#", $data);
+
+        // loop data blocks
+        $parts = [];
+        foreach ($blocks as $block)
+        {
+            if (empty($block)) {
+                continue;
+            }
+
+            if (strpos($block, 'application/octet-stream') !== FALSE) {
+                preg_match("/name=\"([^\"]*)\".*stream[\n|\r]+([^\n\r].*)?$/s", $block, $matches);
+            } else {
+
+                list ($headers, $body) = explode("\r\n\r\n", $block);
+
+                preg_match('/name=\"(.*)\"/', $headers, $matches);
+                if (count($matches) > 0) {
+                    $parts[$matches[1]] = $body;
+                }
+            }
+        }
+
+        return $parts;
+    }
+
+    public function parseRequest($header, $data)
+    {
+        $boundary = $this->parseBoundary($header);
+        $this->parseData($boundary, $data);
     }
 }

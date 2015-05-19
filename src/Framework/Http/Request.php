@@ -29,7 +29,7 @@ class Request extends EventEmitter
     /**
      * @var string
      */
-    private $uri;
+    private $url;
 
     /**
      * @var array
@@ -63,17 +63,17 @@ class Request extends EventEmitter
 
     /**
      * @param string $method
-     * @param string $uri
+     * @param string $url
      * @param array  $query
      * @param array  $headers
      * @param string $version
      */
-    public function __construct($method, $uri, $query = [], $headers = [], $version = '1.1')
+    public function __construct($method, $url, $query = [], $headers = [], $version = '1.1')
     {
         $this->method = $method;
-        $this->uri = $uri;
+        $this->url = $url;
         $this->query = new Dictionary($query);
-        $this->headers = new Dictionary($headers);
+        $this->headers = new HeadersDictionary($headers);
         $this->version = $version;
         $this->setClientIp();
         $this->setHost();
@@ -128,9 +128,9 @@ class Request extends EventEmitter
     /**
      * @return string
      */
-    public function getUri()
+    public function getUrl()
     {
-        return $this->uri;
+        return $this->url;
     }
 
     /**
@@ -197,14 +197,25 @@ class Request extends EventEmitter
         $this->body = $body;
     }
 
-    public static function createFromReactRequest(\React\Http\Request $request)
+    public function isMultipart()
     {
-        return new self(
-            $request->getMethod(),
-            $request->getPath(),
-            $request->getQuery(),
-            $request->getHeaders(),
-            $request->getHttpVersion()
-        );
+        return strpos($this->headers->get('Content-Type'), 'multipart') !== false;
+    }
+
+    public function handleData($data)
+    {
+        if ($this->isMultipart()) {
+            $this->mode = self::MODE_MULTIPART_DATA;
+            $multipartProvider = new MultipartRequestProvider();
+            $data = $multipartProvider->parseRequest($contentType, $data);
+        } else {
+            $request->setBody($data);
+            $dispatcher->dispatch('request', [$request]);
+        }
+    }
+
+    public function handleClose()
+    {
+        $this->emit('end');
     }
 }

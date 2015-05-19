@@ -64,7 +64,7 @@ class Router extends Service
         $controller = null;
         $matches = [];
         foreach ($this->routes as $route) {
-            if ($route->match($request->getUri(), $request->getMethod(), $matches)) {
+            if ($route->match($request->getUrl(), $request->getMethod(), $matches)) {
                 $this->current = $route;
                 $controller = $this->getCallable($route->getHandler());
                 break;
@@ -127,6 +127,6 @@ class Router extends Service
 
     public function isCurrentUrl($url)
     {
-        return (bool) ($this->request !== null ? $url == $this->request->getUri() : false);
+        return (bool) ($this->request !== null ? $url == $this->request->getUrl() : false);
     }
 }
