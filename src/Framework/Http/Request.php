@@ -9,7 +9,8 @@
 namespace Framework\Http;
 
 use Evenement\EventEmitter;
-use Framework\Foundation\Dictionary;
+use React\Http\Foundation\HeaderDictionary;
+use React\Http\Utils\Dictionary;
 
 class Request extends EventEmitter
 {
@@ -61,22 +62,27 @@ class Request extends EventEmitter
      */
     private $body;
 
+    public $files;
+
     /**
-     * @param string $method
-     * @param string $url
-     * @param array  $query
-     * @param array  $headers
-     * @param string $version
+     * @param string           $method
+     * @param string           $url
+     * @param array            $query
+     * @param HeaderDictionary $headers
+     * @param string           $version
      */
-    public function __construct($method, $url, $query = [], $headers = [], $version = '1.1')
+    public function __construct($method, $url, $query = [], HeaderDictionary $headers, $version = '1.1')
     {
         $this->method = $method;
         $this->url = $url;
         $this->query = new Dictionary($query);
-        $this->headers = new HeadersDictionary($headers);
+        $this->headers = $headers;
         $this->version = $version;
         $this->setClientIp();
         $this->setHost();
+
+        $this->files = new Dictionary();
+        $this->atributes = new Dictionary();
 
         $this->cookies = $this->getCookiesFromHeader($this->headers);
     }

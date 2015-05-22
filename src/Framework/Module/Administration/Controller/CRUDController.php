@@ -134,13 +134,16 @@ class CRUDController extends Controller
         $fields = $formFields;
 
         if ($request->getMethod() == 'POST') {
-            parse_str($request->getBody(), $data);
             $item = new $entity;
             foreach ($fields as $field) {
 
                 $name = $field['name'];
 
-                $value = $this->transformValue($field['type'], $data[$name]);
+                if ($field['type'] == 'file') {
+                    $value = $request->files->get($name);
+                } else {
+                    $value = $this->transformValue($field['type'], $request->atributes->get($name));
+                }
 
                 switch (true) {
                     case ($metadata->getTypeOfField($name) !== null) :

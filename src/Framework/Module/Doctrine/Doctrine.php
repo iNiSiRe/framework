@@ -2,7 +2,9 @@
 
 namespace Framework\Module\Doctrine;
 
+use Application\Common\Subscriber\DoctrineSubscriber;
 use Doctrine\Common\Cache\MemcachedCache;
+use Doctrine\Common\EventManager;
 use Doctrine\DBAL\Tools\Console\Helper\ConnectionHelper;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Console\Command\SchemaTool\CreateCommand;
@@ -58,6 +60,9 @@ class Doctrine extends Service
         );
 
         $this->entityManager = EntityManager::create($connection, $config);
+
+        $eventManager = $this->entityManager->getEventManager();
+        $eventManager->addEventSubscriber(new DoctrineSubscriber());
     }
 
     private function initializeCommands()
