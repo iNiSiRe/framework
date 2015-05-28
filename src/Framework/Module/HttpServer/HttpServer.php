@@ -9,18 +9,14 @@
 namespace Framework\Module\HttpServer;
 
 use Framework\DependencyInjection\Container\Service;
-use Framework\Http\ReactRequestHandler;
-use Framework\Http\Request;
+use Framework\Http\File;
 use Framework\Http\Request as KernelRequest;
-use Framework\Http\Response;
 use Framework\Http\Response as KernelResponse;
 use Framework\Module\EventDispatcher\EventDispatcher;
-use Framework\Module\HttpServer\Provider\MultipartRequestProvider;
 use React\EventLoop\Factory;
 use React\Filesystem\Filesystem;
-use React\Http\Foundation\File;
+use React\Http\Processor\FormField;
 use React\Socket\Server;
-use React\Stream\Stream;
 
 class HttpServer extends Service
 {
@@ -68,24 +64,27 @@ class HttpServer extends Service
                 $request->getHttpVersion()
             );
 
-            $request->on('form.file', function ($fieldName, File $file) use ($kernelRequest) {
-                $kernelRequest->files->set($fieldName, $file);
+            $request->on('form.file', function (FormField $field, $originalFilename) use ($kernelRequest) {
+
+                $file = new File();
+                $kernelRequest->files->set($field->getName(), $file);
 
                 $filename = tempnam(sys_get_temp_dir(), '');
 
-                $file->setPath($filename);
+                $file->setName($filename);
+                $file->setOriginalName($originalFilename);
 
 //                $fileDescriptor = $this->filesystem->file($filename);
 
-                $file->on('data', function ($data) use ($filename) {
-                    file_put_contents($filename, $data, FILE_APPEND);
+                $field->on('data', function ($data) use ($filename) {
+                    file_put_contents($filename, $data, FILE_APPEND | FILE_BINARY);
 //                    $fileDescriptor->open('cw')->then(function ($stream) use ($data) {
 //                        $stream->write($data);
 //                        $stream->end();
 //                    });
                 });
 
-                $file->on('end', function ($data) use ($filename) {
+                $field->on('end', function ($data) use ($filename) {
                     file_put_contents($filename, $data, FILE_APPEND);
 //                    $fileDescriptor->open('cw')->then(function ($stream) use ($data) {
 //                        $stream->write($data);
@@ -94,8 +93,10 @@ class HttpServer extends Service
                 });
             });
 
-            $request->on('form.field', function ($name, $value) use ($kernelRequest) {
-                $kernelRequest->atributes->set($name, $value);
+            $request->on('form.field', function (FormField $field) use ($kernelRequest) {
+                $field->on('data', function ($data) use ($kernelRequest, $field) {
+                    $kernelRequest->atributes->set($field->getName(), $data);
+                });
             });
 
             $request->on('end', function () use ($kernelRequest) {
