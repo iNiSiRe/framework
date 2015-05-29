@@ -61,7 +61,7 @@ class HttpServer extends Service
                 $request->getPath(),
                 $request->getQuery(),
                 $request->getHeaders(),
-                $request->getHttpVersion()
+                $request->getVersion()
             );
 
             $request->on('form.file', function (FormField $field, $originalFilename) use ($kernelRequest) {
