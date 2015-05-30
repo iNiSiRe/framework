@@ -60,7 +60,7 @@ class HttpServer extends Service
                 $request->getMethod(),
                 $request->getPath(),
                 $request->getQuery(),
-                $request->getHeaders(),
+                $request->headers,
                 $request->getVersion()
             );
 
