@@ -73,7 +73,7 @@ class Request extends EventEmitter
      */
     public function __construct($method, $url, $query = [], HeaderDictionary $headers, $version = '1.1')
     {
-        $this->method = $method;
+        $this->method = strtolower($method);
         $this->url = $url;
         $this->query = new Dictionary($query);
         $this->headers = $headers;
@@ -99,7 +99,7 @@ class Request extends EventEmitter
         $rawCookies = !empty($header) ? explode(';', $header) : [];
         foreach ($rawCookies as $cookie) {
             list ($key, $value) = explode('=', $cookie);
-            $cookies->set($key, $value);
+            $cookies->set(trim($key), $value);
         }
 
         return $cookies;
@@ -121,6 +121,16 @@ class Request extends EventEmitter
     private function setHost()
     {
         $this->host = $this->headers->get('Host');
+    }
+
+    /**
+     * @param $method
+     *
+     * @return bool
+     */
+    public function isMethod($method)
+    {
+        return $this->method == strtolower($method);
     }
 
     /**
