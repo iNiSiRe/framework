@@ -37,11 +37,6 @@ class HttpServer extends Service
     protected $loop;
 
     /**
-     * @var Filesystem
-     */
-    protected $filesystem;
-
-    /**
      * @throws \React\Socket\ConnectionException
      */
     public function initialize()
@@ -49,8 +44,6 @@ class HttpServer extends Service
         $this->loop = Factory::create();
         $this->socket = new Server($this->loop);
         $this->http = new \React\Http\Server($this->socket);
-
-        $this->filesystem = Filesystem::create($this->loop);
 
         /** @var EventDispatcher $dispatcher */
         $dispatcher = $this->container->get('event_dispatcher');
