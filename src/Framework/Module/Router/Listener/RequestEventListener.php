@@ -37,7 +37,8 @@ class RequestEventListener extends Service
 
             switch (true) {
                 case $e instanceof NotFoundException:
-                    $response = new Response('Not found', ['Content-Type' => 'text/html'], 404);
+                    $content = $this->container->get('twig')->render('Application\Common\Template\404.html.twig');
+                    $response = new Response($content, ['Content-Type' => 'text/html'], 404);
                     break;
 
                 case $e instanceof AccessDeniedException:
@@ -45,14 +46,17 @@ class RequestEventListener extends Service
                     break;
 
                 default:
-                    $errorBody = sprintf('Uncaught "%s" with message "%s" in file "%s" on line %s',
-                        get_class($e),
-                        $e->getMessage(),
-                        $e->getFile(),
-                        $e->getLine()
-                    );
 
-                    $response = new Response($errorBody, ['Content-Type' => 'text/html'], 500);
+                    $content = $this->container->get('twig')->render('Application\Common\Template\404.html.twig');
+
+//                    $errorBody = sprintf('Uncaught "%s" with message "%s" in file "%s" on line %s',
+//                        get_class($e),
+//                        $e->getMessage(),
+//                        $e->getFile(),
+//                        $e->getLine()
+//                    );
+
+                    $response = new Response($content, ['Content-Type' => 'text/html'], 500);
             }
         }
 
