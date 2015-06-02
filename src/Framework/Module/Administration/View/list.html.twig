@@ -13,6 +13,7 @@
                 {% for field in fields %}
                     <th>{{ field.name }}</th>
                 {% endfor %}
+                <th>Actions</th>
             </tr>
         </thead>
 
@@ -25,6 +26,10 @@
                         {% else %}
                             <td>{{ attribute(item, field.name) }}</td>
                         {% endif %}
+                        <td>
+                            <a href="" class="btn btn-default"><i class="glyphicon-edit"></i></a>
+                            <a href="" class="btn btn-default"><i class="glyphicon-remove"></i></a>
+                        </td>
                     {% endfor %}
                 </tr>
             {% endfor %}

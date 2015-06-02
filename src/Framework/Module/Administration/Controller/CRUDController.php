@@ -70,7 +70,7 @@ class CRUDController extends Controller
 
         $choices = [];
         foreach ($entities as $entity) {
-            $name = method_exists($entity, '__toString') ? (string) $entity : '';
+            $name = method_exists($entity, '__toString') ? (string)$entity : '';
             $choices[array_shift($metadata->getIdentifierValues($entity))] = $name;
         }
 
@@ -99,7 +99,7 @@ class CRUDController extends Controller
         switch ($type) {
             case 'boolean':
                 return $value == 'on';
-            break;
+                break;
         }
 
         return $value;
@@ -189,5 +189,65 @@ class CRUDController extends Controller
         $action = $this->container->get('router')->generateUrl('administration_create', [$pageName]);
 
         return new Response($this->render('Framework/Module/Administration/View/create.html.twig', compact('fields', 'action')));
+    }
+
+    public function editAction(Request $request, $page, $id)
+    {
+        /**
+         * @var Page          $page
+         * @var EntityManager $em
+         */
+        $page = $this->container->get('administration')->get($page);
+        $em = $this->container->get('doctrine')->getManager();
+
+        if (!$page) {
+            throw new NotFoundException();
+        }
+
+        $entityClass = $page->getEntity();
+        $object = $em->getRepository($entityClass)->find($id);
+
+        if (!$object) {
+            throw new NotFoundException();
+        }
+
+        $fields = $page->getEditFields();
+        $metadata = $em->getMetadataFactory()->getMetadataFor($entityClass);
+
+        $form = [];
+        foreach ($fields as $field => $options) {
+            if (!isset($options['type'])) {
+                $this->defineFieldType($metadata, $field, $options);
+            }
+
+            switch (true) {
+                case ($metadata->getTypeOfField($field) !== null) :
+                    $getter = 'get' . ucfirst($field);
+                    if (method_exists($object, $getter)) {
+                        $options['value'] = $object->$getter();
+                    }
+
+                    break;
+
+                case ($metadata->getAssociationTargetClass($field) !== null) :
+                    $association = $metadata->getAssociationMapping($field);
+                    $targetClass = $association['targetEntity'];
+
+                    $getter = 'get' . ucfirst($field);
+                    if (method_exists($object, $getter)) {
+                        $options['value'] = $em->getRepository($targetClass)->find($object->$getter());
+                    }
+
+                    break;
+
+                default:
+            }
+
+            $form[] = array_merge(['name' => $field], $options);
+        }
+
+        $action = $this->container->get('router')->generateUrl('administration_edit', [$page]);
+
+        return new Response($this->render('Framework/Module/Administration/View/edit.html.twig', compact('form', 'action')));
     }
 }
