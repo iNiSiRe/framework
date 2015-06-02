@@ -47,14 +47,14 @@ class RequestEventListener extends Service
 
                 default:
 
-                    $content = $this->container->get('twig')->render('Application\Common\Template\404.html.twig');
+                    $error = sprintf('Uncaught "%s" with message "%s" in file "%s" on line %s',
+                        get_class($e),
+                        $e->getMessage(),
+                        $e->getFile(),
+                        $e->getLine()
+                    );
 
-//                    $errorBody = sprintf('Uncaught "%s" with message "%s" in file "%s" on line %s',
-//                        get_class($e),
-//                        $e->getMessage(),
-//                        $e->getFile(),
-//                        $e->getLine()
-//                    );
+                    $content = $this->container->get('twig')->render('Application\Common\Template\500.html.twig', compact('error'));
 
                     $response = new Response($content, ['Content-Type' => 'text/html'], 500);
             }

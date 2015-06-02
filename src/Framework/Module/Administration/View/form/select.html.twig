@@ -3,7 +3,7 @@
     <div class="col-sm-10">
         <select class="form-control" name="{{ field.name }}">
             {% for id, value in field.choices %}
-                <option value="{{ id }}">{{ value }}</option>
+                <option value="{{ id }}" {% if field.value == id %}selected{% endif %}>{{ value }}</option>
             {% endfor %}
         </select>
     </div>

@@ -221,13 +221,36 @@ class CRUDController extends Controller
         return new Response($this->render('Framework/Module/Administration/View/create.html.twig', compact('fields', 'action')));
     }
 
-    public function editAction(Request $request, $page, $id)
+    public function recognizeSetter($object, $name)
+    {
+        $method = 'set' . ucfirst($name);
+        if (method_exists($object, $method)) {
+            return $method;
+        }
+
+        throw new \Exception("Bad setter for {$name}.");
+    }
+
+    public function recognizeGetter($object, $name)
+    {
+        $variants = ['get', 'is'];
+        foreach ($variants as $variant) {
+            $method = $variant . ucfirst($name);
+            if (method_exists($object, $method)) {
+                return $method;
+            }
+        }
+
+        throw new \Exception("Bad getter for {$name}.");
+    }
+
+    public function editAction(Request $request, $pageName, $id)
     {
         /**
          * @var Page          $page
          * @var EntityManager $em
          */
-        $page = $this->container->get('administration')->get($page);
+        $page = $this->container->get('administration')->get($pageName);
         $em = $this->container->get('doctrine')->getManager();
 
         if (!$page) {
@@ -250,24 +273,18 @@ class CRUDController extends Controller
                 $this->defineFieldType($metadata, $field, $options);
             }
 
+            $getter = $this->recognizeGetter($object, $field);
+            $value = $object->$getter();
+
             switch (true) {
                 case ($metadata->getTypeOfField($field) !== null) :
-                    $getter = 'get' . ucfirst($field);
-                    if (method_exists($object, $getter)) {
-                        $options['value'] = $object->$getter();
-                    }
-
+                    $options['value'] = $value;
                     break;
 
                 case ($metadata->getAssociationTargetClass($field) !== null) :
                     $association = $metadata->getAssociationMapping($field);
                     $targetClass = $association['targetEntity'];
-
-                    $getter = 'get' . ucfirst($field);
-                    if (method_exists($object, $getter)) {
-                        $options['value'] = $em->getRepository($targetClass)->find($object->$getter());
-                    }
-
+                    $options['value'] = $em->getRepository($targetClass)->find($value);
                     break;
 
                 default:
@@ -276,8 +293,79 @@ class CRUDController extends Controller
             $form[] = array_merge(['name' => $field], $options);
         }
 
-        $action = $this->container->get('router')->generateUrl('administration_edit', [$page]);
+        if ($request->isMethod('post')) {
+            foreach ($fields as $field => $options) {
+                if ($options['type'] == 'file') {
+                    $value = $request->files->get($field);
+                } else {
+                    $value = $this->transformValue($options['type'], $request->atributes->get($field));
+                }
+
+                $setter = $this->recognizeSetter($object, $field);
+
+                switch (true) {
+                    case ($metadata->getTypeOfField($field) !== null) :
+                        if ($value !== null) {
+                            $object->$setter($value);
+                        }
+                        break;
+
+                    case ($metadata->getAssociationTargetClass($field) !== null) :
+                        $association = $metadata->getAssociationMapping($field);
+                        $targetClass = $association['targetEntity'];
+                        $entity = $em->getRepository($targetClass)->find($value);
+                        $object->$setter($entity);
+                        break;
+                }
+            }
+
+            $em->persist($object);
+            $em->flush();
+
+            $url = $this->container->get('router')->generateUrl('administration_list', [$pageName]);
+
+            return new RedirectResponse($url);
+        }
+
+        $action = $this->container->get('router')->generateUrl('administration_edit', [$pageName]);
 
         return new Response($this->render('Framework/Module/Administration/View/edit.html.twig', compact('form', 'action')));
+    }
+
+    /**
+     * @param Request $request
+     * @param         $name
+     * @param         $id
+     *
+     * @return RedirectResponse
+     * @throws NotFoundException
+     * @throws \Exception
+     */
+    public function deleteAction(Request $request, $name, $id)
+    {
+        /**
+         * @var Page          $page
+         * @var EntityManager $em
+         */
+        $page = $this->container->get('administration')->get($name);
+        $em = $this->container->get('doctrine')->getManager();
+
+        if (!$page) {
+            throw new NotFoundException();
+        }
+
+        $entityClass = $page->getEntity();
+        $object = $em->getRepository($entityClass)->find($id);
+
+        if (!$object) {
+            throw new NotFoundException();
+        }
+
+        $em->remove($object);
+        $em->flush();
+
+        $url = $this->container->get('router')->generateUrl('administration_list', [$name]);
+
+        return new RedirectResponse($url);
     }
 }

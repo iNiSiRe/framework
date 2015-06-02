@@ -9,6 +9,6 @@ class RedirectResponse extends Response
      */
     public function __construct($url)
     {
-        parent::__construct('', ['Location' => $url], 301);
+        parent::__construct('', ['Location' => $url], 302);
     }
 }

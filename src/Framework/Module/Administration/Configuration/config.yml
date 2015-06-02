@@ -8,6 +8,15 @@ routes:
     pattern: /admin/(\w+)/create
     handler: Framework\Module\Administration\Controller\CRUDController:create
 
+  administration_edit:
+    methods: [GET, POST]
+    pattern: /admin/(\w+)/edit/(\d+)
+    handler: Framework\Module\Administration\Controller\CRUDController:edit
+
+  administration_delete:
+    pattern: /admin/(\w+)/delete/(\d+)
+    handler: Framework\Module\Administration\Controller\CRUDController:delete
+
 extensions:
   administration_menu: Framework\Module\Administration\Extension\Menu
 
