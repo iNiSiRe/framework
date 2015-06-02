@@ -14,7 +14,7 @@ class Route
     /**
      * @var array
      */
-    private $method;
+    private $methods;
 
     /**
      * @var string
@@ -30,12 +30,12 @@ class Route
      * @param string $name
      * @param string $pattern
      * @param string $handler
-     * @param array  $method
+     * @param array  $methods
      */
-    public function __construct($name, $pattern, $method = [Request::GET], $handler)
+    public function __construct($name, $pattern, $methods = [Request::GET], $handler)
     {
         $this->pattern = $pattern;
-        $this->method = $method;
+        $this->methods = array_map('strtolower', $methods);
         $this->handler = $handler;
         $this->name = $name;
     }
@@ -49,7 +49,7 @@ class Route
      */
     public function match($uri, $method, &$matches)
     {
-        if (!in_array($method, $this->method)) {
+        if (!in_array(strtolower($method), $this->methods)) {
             return false;
         }
 

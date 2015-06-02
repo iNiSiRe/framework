@@ -9,12 +9,28 @@ use Framework\Controller\Controller;
 use Framework\Http\RedirectResponse;
 use Framework\Http\Request;
 use Framework\Http\Response;
+use Framework\Module\Router\Exception\AccessDeniedException;
 use Framework\Module\Router\Exception\NotFoundException;
 
 class CRUDController extends Controller
 {
+    /**
+     * @param Request $request
+     * @param         $pageName
+     *
+     * @return Response
+     *
+     * @throws AccessDeniedException
+     * @throws NotFoundException
+     * @throws \Doctrine\Common\Persistence\Mapping\MappingException
+     * @throws \Exception
+     */
     public function listAction(Request $request, $pageName)
     {
+        if (!$this->isGranted($request)) {
+            throw new AccessDeniedException();
+        }
+
         /** @var Page $page */
         $page = $this->container->get('administration')->get($pageName);
 
@@ -105,8 +121,22 @@ class CRUDController extends Controller
         return $value;
     }
 
+    /**
+     * @param Request $request
+     * @param         $pageName
+     *
+     * @return RedirectResponse|Response
+     * @throws AccessDeniedException
+     * @throws NotFoundException
+     * @throws \Doctrine\Common\Persistence\Mapping\MappingException
+     * @throws \Exception
+     */
     public function createAction(Request $request, $pageName)
     {
+        if (!$this->isGranted($request)) {
+            throw new AccessDeniedException();
+        }
+
         /** @var Page $page */
         /** @var EntityManager $em */
         $page = $this->container->get('administration')->get($pageName);
@@ -133,7 +163,7 @@ class CRUDController extends Controller
 
         $fields = $formFields;
 
-        if ($request->getMethod() == 'POST') {
+        if ($request->isMethod('post')) {
             $item = new $entity;
             foreach ($fields as $field) {
 

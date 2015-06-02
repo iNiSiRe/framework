@@ -12,6 +12,8 @@ use Doctrine\ORM\EntityManager;
 use Framework\DependencyInjection\Container\Service;
 use Framework\Http\Request;
 use Framework\Http\Response;
+use Framework\Module\Router\Exception\AccessDeniedException;
+use Framework\Module\Router\Exception\NotFoundException;
 
 class RequestEventListener extends Service
 {
@@ -32,14 +34,30 @@ class RequestEventListener extends Service
             $em = $this->container->get('doctrine')->getManager();
             $em->getUnitOfWork()->clear();
         } catch (\Exception $e) {
-            $errorBody = sprintf('Uncaught "%s" with message "%s" in file "%s" on line %s',
-                get_class($e),
-                $e->getMessage(),
-                $e->getFile(),
-                $e->getLine()
-            );
 
-            $response = new Response($errorBody, ['Content-Type' => 'text/html'], 500);
+            switch (true) {
+                case $e instanceof NotFoundException:
+                    $content = $this->container->get('twig')->render('Application\Common\Template\404.html.twig');
+                    $response = new Response($content, ['Content-Type' => 'text/html'], 404);
+                    break;
+
+                case $e instanceof AccessDeniedException:
+                    $response = new Response('Access denied', ['Content-Type' => 'text/html'], 403);
+                    break;
+
+                default:
+
+                    $content = $this->container->get('twig')->render('Application\Common\Template\404.html.twig');
+
+//                    $errorBody = sprintf('Uncaught "%s" with message "%s" in file "%s" on line %s',
+//                        get_class($e),
+//                        $e->getMessage(),
+//                        $e->getFile(),
+//                        $e->getLine()
+//                    );
+
+                    $response = new Response($content, ['Content-Type' => 'text/html'], 500);
+            }
         }
 
         $request->emit('response', [$response]);

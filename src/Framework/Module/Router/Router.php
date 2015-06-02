@@ -118,7 +118,7 @@ class Router extends Service
     public function generateUrl($name, $parameters = [])
     {
         $pattern = $this->routes[$name]->getPattern();
-        $format = preg_replace('#\((.+)\)#', '%s', $pattern);
+        $format = preg_replace('#\((.+)\)#U', '%s', $pattern);
 
         $url = call_user_func_array('sprintf', array_merge([$format], $parameters));
 
