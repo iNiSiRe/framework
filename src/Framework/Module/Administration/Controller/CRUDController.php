@@ -268,7 +268,7 @@ class CRUDController extends Controller
         $metadata = $em->getMetadataFactory()->getMetadataFor($entityClass);
 
         $form = [];
-        foreach ($fields as $field => $options) {
+        foreach ($fields as $field => &$options) {
             if (!isset($options['type'])) {
                 $this->defineFieldType($metadata, $field, $options);
             }
@@ -320,14 +320,14 @@ class CRUDController extends Controller
             }
 
             $em->persist($object);
-            $em->flush();
+            $em->flush($object);
 
             $url = $this->container->get('router')->generateUrl('administration_list', [$pageName]);
 
             return new RedirectResponse($url);
         }
 
-        $action = $this->container->get('router')->generateUrl('administration_edit', [$pageName]);
+        $action = $this->container->get('router')->generateUrl('administration_edit', [$pageName, $id]);
 
         return new Response($this->render('Framework/Module/Administration/View/edit.html.twig', compact('form', 'action')));
     }

@@ -78,7 +78,14 @@ class HttpServer extends Service
 
                     $filename = tempnam(sys_get_temp_dir(), '');
 
+                    $kernelRequest->files->set($field->getName(), null);
+
                     $dataHandler = function ($data) use ($filename, $kernelRequest, $field) {
+
+                        if (!$data) {
+                            return;
+                        }
+
                         if ($kernelRequest->files->get($field->getName()) === null) {
                             $file = new File();
                             $file->setName($filename);
@@ -90,6 +97,10 @@ class HttpServer extends Service
                     };
                 } else {
                     $dataHandler = function ($data) use ($kernelRequest, $field) {
+                        $oldData = $kernelRequest->atributes->get($field->getName());
+                        if ($oldData) {
+                            $data = $oldData . $data;
+                        }
                         $kernelRequest->atributes->set($field->getName(), $data);
                     };
                 }
