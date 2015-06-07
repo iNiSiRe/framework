@@ -268,9 +268,9 @@ class CRUDController extends Controller
         $metadata = $em->getMetadataFactory()->getMetadataFor($entityClass);
 
         $form = [];
-        foreach ($fields as $field => &$options) {
+        foreach ($fields as $field => $options) {
             if (!isset($options['type'])) {
-                $this->defineFieldType($metadata, $field, $options);
+                $this->defineFieldType($metadata, $field, $fields[$field]);
             }
 
             $getter = $this->recognizeGetter($object, $field);
@@ -278,19 +278,19 @@ class CRUDController extends Controller
 
             switch (true) {
                 case ($metadata->getTypeOfField($field) !== null) :
-                    $options['value'] = $value;
+                    $fields[$field]['value'] = $value;
                     break;
 
                 case ($metadata->getAssociationTargetClass($field) !== null) :
                     $association = $metadata->getAssociationMapping($field);
                     $targetClass = $association['targetEntity'];
-                    $options['value'] = $em->getRepository($targetClass)->find($value);
+                    $fields[$field]['value'] = $em->getRepository($targetClass)->find($value);
                     break;
 
                 default:
             }
 
-            $form[] = array_merge(['name' => $field], $options);
+            $form[] = array_merge(['name' => $field], $fields[$field]);
         }
 
         if ($request->isMethod('post')) {
