@@ -186,23 +186,14 @@ class CRUDController extends Controller
                     case ($metadata->getAssociationTargetClass($name) !== null) :
                         $association = $metadata->getAssociationMapping($name);
                         $targetClass = $association['targetEntity'];
-                        $inversedBy = $association['inversedBy'];
-                        $entity = $em->getRepository($targetClass)->find($value);
-
-                        $setter = 'set' . ucfirst($name);
-                        if (method_exists($item, $setter)) {
-                            $item->$setter($entity);
+                        if (is_array($value)) {
+                            $entity = [];
+                            foreach ($value as $id) {
+                                $entity[] = $em->getRepository($targetClass)->find($id);
+                            }
                         }
-
-//                        $collectionGetter = 'get' . ucfirst($inversedBy);
-//                        if (method_exists($entity, $collectionGetter)) {
-//                            /** @var ArrayCollection $items */
-//                            $items = $entity->$collectionGetter();
-//                            $items->add($item);
-//                        }
-//
-//                        $em->persist($entity);
-
+                        $setter = $this->recognizeSetter($item, $name);
+                        $item->$setter($entity);
                         break;
 
                     default:
@@ -284,7 +275,11 @@ class CRUDController extends Controller
                 case ($metadata->getAssociationTargetClass($field) !== null) :
                     $association = $metadata->getAssociationMapping($field);
                     $targetClass = $association['targetEntity'];
-                    $fields[$field]['value'] = $em->getRepository($targetClass)->find($value);
+                    if (is_array($value) || $value instanceof \ArrayAccess) {
+                        $fields[$field]['value'] = $value;
+                    } else {
+                        $fields[$field]['value'] = $em->getRepository($targetClass)->find($value);
+                    }
                     break;
 
                 default:

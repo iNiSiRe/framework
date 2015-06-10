@@ -75,37 +75,41 @@ class HttpServer extends Service
 
             $requestHandler->on('data', function (FormField $field) use ($kernelRequest) {
                 if ($field->isFile()) {
-
                     $filename = tempnam(sys_get_temp_dir(), '');
-
                     $kernelRequest->files->set($field->getName(), null);
-
-                    $dataHandler = function ($data) use ($filename, $kernelRequest, $field) {
-
-                        if (!$data) {
-                            return;
-                        }
-
-                        if ($kernelRequest->files->get($field->getName()) === null) {
-                            $file = new File();
-                            $file->setName($filename);
-                            $file->setOriginalName($field->attributes->get(FormField::ORIGINAL_FILENAME));
-                            $kernelRequest->files->set($field->getName(), $file);
-                        }
-
+                    $dataHandler = function ($data) use ($filename) {
                         file_put_contents($filename, $data, FILE_APPEND | FILE_BINARY);
                     };
-                } else {
-                    $dataHandler = function ($data) use ($kernelRequest, $field) {
-                        $oldData = $kernelRequest->atributes->get($field->getName());
-                        if ($oldData) {
-                            $data = $oldData . $data;
+                    $endDataHandler = function ($data) use ($filename, $field, $kernelRequest, $dataHandler) {
+                        $dataHandler($data);
+                        if (!filesize($filename)) {
+                            return;
                         }
-                        $kernelRequest->atributes->set($field->getName(), $data);
+                        $file = new File();
+                        $file->setName($filename);
+                        $file->setOriginalName($field->attributes->get(FormField::ORIGINAL_FILENAME));
+                        $kernelRequest->files->set($field->getName(), $file);
+                    };
+                } else {
+                    $total = '';
+                    $dataHandler = function ($data) use (&$total) {
+                        $total .= $data;
+                    };
+                    $endDataHandler = function ($data) use (&$total, $dataHandler, $kernelRequest, $field) {
+                        $dataHandler($data);
+                        $value = $kernelRequest->atributes->get($field->getName());
+                        if ($value === null) {
+                            $kernelRequest->atributes->set($field->getName(), $total);
+                        } elseif (is_array($value)) {
+                            $value[] = $total;
+                            $kernelRequest->atributes->set($field->getName(), $value);
+                        } else {
+                            $kernelRequest->atributes->set($field->getName(), [$value, $total]);
+                        }
                     };
                 }
-
                 $field->on('data', $dataHandler);
+                $field->on('end', $endDataHandler);
             });
 
             $requestHandler->handle($request);

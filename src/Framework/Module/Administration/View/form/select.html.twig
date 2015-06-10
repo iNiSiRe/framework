@@ -3,7 +3,18 @@
     <div class="col-sm-10">
         <select class="form-control select2 select2-choices" {% if field.multiple %}multiple{% endif %} name="{{ field.name }}">
             {% for id, value in field.choices %}
-                <option value="{{ id }}" {% if field.value == id %}selected{% endif %}>{{ value }}</option>
+                {% if field.value is iterable %}
+                    {% set selected = false %}
+                    {% for data in field.value if attribute(data, 'id') == id %}
+                        {{ attribute(data, 'id') }} = {{ id }}
+                        {% set selected = true %}
+                    {% endfor %}
+                {% elseif field.value == id %}
+                    {% set selected = true %}
+                {% else %}
+                    {% set selected = true %}
+                {% endif %}
+                <option value="{{ id }}" {% if selected == true %}selected{% endif %}>{{ value }}</option>
             {% endfor %}
         </select>
     </div>
