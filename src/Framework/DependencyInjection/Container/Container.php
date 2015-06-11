@@ -74,6 +74,24 @@ class Container
     }
 
     /**
+     * Replace in configurations parameters variables
+     * Example: %database_host% -> 127.0.0.1
+     *
+     * @param $configuration
+     */
+    private function replaceConfigurationParameters(&$configuration)
+    {
+        foreach ($configuration as $key => &$value) {
+            if (strpos($value, '%') === false) {
+                continue;
+            }
+            $value = preg_replace_callback('/%(.+)%/U', function ($matches) {
+                return $this->parameters->get($matches[1]);
+            }, $value);
+        }
+    }
+
+    /**
      * @param $name
      *
      * @return mixed
@@ -90,6 +108,7 @@ class Container
 
             try {
                 $configuration = $this->configuration->get($name, []);
+                $this->replaceConfigurationParameters($configuration);
                 $instance = $this->createServiceInstance($class, $configuration);
             } catch (NotInstanceOfServiceException $e) {
                 throw new \Exception(sprintf('Service "%s" should be instance of "%s", instance of "%s" given', $name, Service::class, $class));
