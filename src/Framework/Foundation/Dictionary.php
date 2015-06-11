@@ -25,7 +25,17 @@ class Dictionary
      */
     public function get($key, $default = null)
     {
-        return isset($this->dictionary[$key]) ? $this->dictionary[$key] : $default;
+        return array_key_exists($key, $this->dictionary) ? $this->dictionary[$key] : $default;
+    }
+
+    /**
+     * @param $key
+     *
+     * @return bool
+     */
+    public function has($key)
+    {
+        return array_key_exists($key, $this->dictionary);
     }
 
     /**

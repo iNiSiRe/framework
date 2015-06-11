@@ -34,16 +34,13 @@ class Container
     public $environment;
 
     /**
-     * @param int   $environment
      * @param array $configuration
      */
-    public function __construct($environment = Kernel::ENV_DEV, array $configuration)
+    public function __construct(array $configuration)
     {
-        $this->environment = $environment;
         $this->parameters = new Dictionary();
         $this->services = new Dictionary();
         $this->configuration = new Dictionary($configuration);
-        $this->compile();
     }
 
     public function compile()
@@ -86,6 +83,10 @@ class Container
                 continue;
             }
             $value = preg_replace_callback('/%(.+)%/U', function ($matches) {
+                if (!$this->parameters->has($matches[1])) {
+                    throw new \Exception("Nonexistent parameter '{$matches[1]}'");
+                }
+
                 return $this->parameters->get($matches[1]);
             }, $value);
         }

@@ -26,13 +26,13 @@ use React\Socket\Server;
 
 class Kernel
 {
-    const MODE_DEFAULT = 1;
-    const MODE_CONSOLE = 2;
-
     const ENV_DEV = 1;
     const ENV_PROD = 2;
 
-    const EVENT_REQUEST = 'request';
+    protected static $environmentLabels = [
+        self::ENV_DEV => 'dev',
+        self::ENV_PROD => 'prod'
+    ];
 
     /**
      * @var Container
@@ -46,12 +46,13 @@ class Kernel
 
     /**
      * @param     $environment
-     * @param     $configurationFile
+     * @param     $rootDir
      */
-    public function __construct($environment, $configurationFile)
+    public function __construct($environment, $rootDir)
     {
         $loader = new ConfigurationLoader();
 
+        // Enable modules
         $this->modules = [
             new EventDispatcherModule(),
             new HttpServerModule(),
@@ -65,17 +66,34 @@ class Kernel
             new ApplicationModule()
         ];
 
-        foreach ($this->modules as $module)
-        {
+        // Load modules configurations
+        foreach ($this->modules as $module) {
             $loader->addFiles($module->getConfigurations());
         }
         
-        $this->container = new Container($environment, $loader->load());
+        $this->container = new Container($loader->load());
+
+        // Define kernel parameters
+        $this->container->parameters->set('kernel.root_dir', $rootDir);
+        $this->container->parameters->set('kernel.env', self::getEnvironmentLabel($environment));
+
+        // Compile container
+        $this->container->compile();
     }
 
     public function run()
     {
         $server = $this->container->get('http_server');
         $server->run();
+    }
+
+    /**
+     * @param int $environment
+     *
+     * @return string
+     */
+    public static function getEnvironmentLabel($environment)
+    {
+        return self::$environmentLabels[$environment];
     }
 }
