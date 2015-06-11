@@ -4,11 +4,13 @@ namespace Framework\Module\Administration\Controller;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Framework\Module\Administration\Page;
 use Framework\Controller\Controller;
 use Framework\Http\RedirectResponse;
 use Framework\Http\Request;
 use Framework\Http\Response;
+use Framework\Module\Doctrine\Doctrine;
 use Framework\Module\Router\Exception\AccessDeniedException;
 use Framework\Module\Router\Exception\NotFoundException;
 
@@ -186,14 +188,27 @@ class CRUDController extends Controller
                     case ($metadata->getAssociationTargetClass($name) !== null) :
                         $association = $metadata->getAssociationMapping($name);
                         $targetClass = $association['targetEntity'];
-                        if (is_array($value)) {
-                            $entity = [];
-                            foreach ($value as $id) {
-                                $entity[] = $em->getRepository($targetClass)->find($id);
+                        if (!empty($value)) {
+                            switch ($association['type']) {
+                                case ClassMetadataInfo::MANY_TO_MANY:
+                                    $entityValue = [];
+                                    if (is_array($value)) {
+                                        foreach ($value as $id) {
+                                            $entityValue[] = $em->getRepository($targetClass)->find($id);
+                                        }
+                                    } else {
+                                        $entityValue[] = $em->getRepository($targetClass)->find($value);
+                                    }
+                                    $value = $entityValue;
+                                    break;
+
+                                case ClassMetadataInfo::MANY_TO_ONE:
+                                    $value = $em->getRepository($targetClass)->find($value);
+                                    break;
                             }
                         }
                         $setter = $this->recognizeSetter($item, $name);
-                        $item->$setter($entity);
+                        $item->$setter($value);
                         break;
 
                     default:
@@ -308,8 +323,24 @@ class CRUDController extends Controller
                     case ($metadata->getAssociationTargetClass($field) !== null) :
                         $association = $metadata->getAssociationMapping($field);
                         $targetClass = $association['targetEntity'];
-                        $entity = $em->getRepository($targetClass)->find($value);
-                        $object->$setter($entity);
+                        switch ($association['type']) {
+                            case ClassMetadataInfo::MANY_TO_MANY:
+                                $entityValue = [];
+                                if (is_array($value)) {
+                                    foreach ($value as $id) {
+                                        $entityValue[] = $em->getRepository($targetClass)->find($id);
+                                    }
+                                } else {
+                                    $entityValue[] = $em->getRepository($targetClass)->find($value);
+                                }
+                                $value = $entityValue;
+                            break;
+
+                            case ClassMetadataInfo::MANY_TO_ONE:
+                                $value = $em->getRepository($targetClass)->find($value);
+                                break;
+                        }
+                        $object->$setter($value);
                         break;
                 }
             }

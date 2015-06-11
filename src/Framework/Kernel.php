@@ -29,9 +29,12 @@ class Kernel
     const ENV_DEV = 1;
     const ENV_PROD = 2;
 
+    const ENV_DEV_NAME = 'dev';
+    const ENV_PROD_NAME = 'prod';
+
     protected static $environmentLabels = [
-        self::ENV_DEV => 'dev',
-        self::ENV_PROD => 'prod'
+        self::ENV_DEV => self::ENV_DEV_NAME,
+        self::ENV_PROD => self::ENV_PROD_NAME
     ];
 
     /**
@@ -75,7 +78,7 @@ class Kernel
 
         // Define kernel parameters
         $this->container->parameters->set('kernel.root_dir', $rootDir);
-        $this->container->parameters->set('kernel.env', self::getEnvironmentLabel($environment));
+        $this->container->parameters->set('kernel.env', self::getEnvironmentName($environment));
 
         // Compile container
         $this->container->compile();
@@ -92,7 +95,7 @@ class Kernel
      *
      * @return string
      */
-    public static function getEnvironmentLabel($environment)
+    public static function getEnvironmentName($environment)
     {
         return self::$environmentLabels[$environment];
     }
