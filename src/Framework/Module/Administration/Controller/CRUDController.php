@@ -323,22 +323,24 @@ class CRUDController extends Controller
                     case ($metadata->getAssociationTargetClass($field) !== null) :
                         $association = $metadata->getAssociationMapping($field);
                         $targetClass = $association['targetEntity'];
-                        switch ($association['type']) {
-                            case ClassMetadataInfo::MANY_TO_MANY:
-                                $entityValue = [];
-                                if (is_array($value)) {
-                                    foreach ($value as $id) {
-                                        $entityValue[] = $em->getRepository($targetClass)->find($id);
+                        if (!empty($value)) {
+                            switch ($association['type']) {
+                                case ClassMetadataInfo::MANY_TO_MANY:
+                                    $entityValue = [];
+                                    if (is_array($value)) {
+                                        foreach ($value as $id) {
+                                            $entityValue[] = $em->getRepository($targetClass)->find($id);
+                                        }
+                                    } else {
+                                        $entityValue[] = $em->getRepository($targetClass)->find($value);
                                     }
-                                } else {
-                                    $entityValue[] = $em->getRepository($targetClass)->find($value);
-                                }
-                                $value = $entityValue;
-                            break;
+                                    $value = $entityValue;
+                                    break;
 
-                            case ClassMetadataInfo::MANY_TO_ONE:
-                                $value = $em->getRepository($targetClass)->find($value);
-                                break;
+                                case ClassMetadataInfo::MANY_TO_ONE:
+                                    $value = $em->getRepository($targetClass)->find($value);
+                                    break;
+                            }
                         }
                         $object->$setter($value);
                         break;
