@@ -64,6 +64,8 @@ class Request extends EventEmitter
 
     public $files;
 
+    private $locale;
+
     /**
      * @param string           $method
      * @param string           $url
@@ -233,5 +235,29 @@ class Request extends EventEmitter
     public function handleClose()
     {
         $this->emit('end');
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getLocale()
+    {
+        return $this->locale;
+    }
+
+    /**
+     * @param mixed $locale
+     */
+    public function setLocale($locale)
+    {
+        $this->locale = $locale;
+    }
+
+    /**
+     * @param string $url
+     */
+    public function setUrl($url)
+    {
+        $this->url = $url;
     }
 }

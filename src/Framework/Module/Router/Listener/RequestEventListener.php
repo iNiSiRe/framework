@@ -27,6 +27,7 @@ class RequestEventListener extends Service
     public function onRequest(Request $request)
     {
         try {
+            $this->recognizeLocale($request);
             $response = $this->container->get('router')->handle($request);
 
             // Clear Doctrine cache
@@ -61,5 +62,29 @@ class RequestEventListener extends Service
         }
 
         $request->emit('response', [$response]);
+    }
+
+    /**
+     * @param Request $request
+     *
+     * @return bool
+     */
+    public function recognizeLocale(Request $request)
+    {
+        $locales = $this->container->parameters->get('locales', []);
+        if (empty($locales)) {
+            return false;
+        }
+        $locales = implode('|', $locales);
+        if (preg_match("#^/({$locales})/#", $request->getUrl(), $matches)) {
+            $locale = $matches[1];
+            $request->setUrl(preg_replace("#^/{$matches[1]}/#", '/', $request->getUrl(), 1));
+        } else {
+            $locale = $locales[0];
+        }
+        $request->setLocale($locale);
+        $this->container->get('translator')->setLocale($locale);
+
+        return true;
     }
 }
