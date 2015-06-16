@@ -12,7 +12,7 @@
                 {% elseif field.value == id %}
                     {% set selected = true %}
                 {% else %}
-                    {% set selected = true %}
+                    {% set selected = false %}
                 {% endif %}
                 <option value="{{ id }}" {% if selected == true %}selected{% endif %}>{{ value }}</option>
             {% endfor %}

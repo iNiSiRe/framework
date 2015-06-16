@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityManager;
 use Framework\DependencyInjection\Container\Service;
 use Framework\Http\Request;
 use Framework\Http\Response;
+use Framework\Kernel;
 use Framework\Module\Router\Exception\AccessDeniedException;
 use Framework\Module\Router\Exception\NotFoundException;
 
@@ -47,17 +48,19 @@ class RequestEventListener extends Service
                     break;
 
                 default:
-
-                    $error = sprintf('Uncaught "%s" with message "%s" in file "%s" on line %s',
-                        get_class($e),
-                        $e->getMessage(),
-                        $e->getFile(),
-                        $e->getLine()
-                    );
-
-                    $content = $this->container->get('twig')->render('Application\Common\Template\500.html.twig', compact('error'));
-
-                    $response = new Response($content, ['Content-Type' => 'text/html'], 500);
+                    $environment = $this->container->parameters->get('kernel.env');
+                    if ($environment == Kernel::ENV_DEV_NAME) {
+                        $error = sprintf('Uncaught "%s" with message "%s" in file "%s" on line %s',
+                            get_class($e),
+                            $e->getMessage(),
+                            $e->getFile(),
+                            $e->getLine()
+                        );
+                        $response = new Response($error, ['Content-Type' => 'text/html'], 500);
+                    } else {
+                        $content = $this->container->get('twig')->render('Application\Common\Template\500.html.twig');
+                        $response = new Response($content, ['Content-Type' => 'text/html'], 500);
+                    }
             }
         }
 
