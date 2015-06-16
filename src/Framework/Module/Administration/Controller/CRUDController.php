@@ -10,7 +10,6 @@ use Framework\Controller\Controller;
 use Framework\Http\RedirectResponse;
 use Framework\Http\Request;
 use Framework\Http\Response;
-use Framework\Module\Doctrine\Doctrine;
 use Framework\Module\Router\Exception\AccessDeniedException;
 use Framework\Module\Router\Exception\NotFoundException;
 

@@ -21,7 +21,7 @@ class TranslatorBuilder extends ServiceBuilder
 
     public function initialize()
     {
-        $translator = new Translator('ua');
+        $translator = new Translator('ua', null, ROOT_DIR . '/cache/translation');
         $translator->addLoader('yaml', new YamlFileLoader());
 
         $translations = $this->container->configuration->get('translations', []);

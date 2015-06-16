@@ -2,6 +2,8 @@
 
 namespace Framework\Module\Administration;
 
+use Symfony\Component\Form\FormBuilderInterface;
+
 abstract class Page
 {
     protected $listFields = [];
@@ -23,5 +25,10 @@ abstract class Page
     public function getEditFields()
     {
         return $this->editFields;
+    }
+
+    public function buildEditForm(FormBuilderInterface $formBuilder)
+    {
+
     }
 }
