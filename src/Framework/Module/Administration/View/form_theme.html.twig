@@ -1,0 +1,112 @@
+{% extends 'form_div_layout.html.twig' %}
+
+{% form_theme form _self %}
+
+{%- block form_widget_simple -%}
+    {%- set type = type|default('text') -%}
+    <input type="{{ type }}" {{ block('widget_attributes') }} {% if value is not empty %}value="{{ value }}" {% endif %}/>
+{%- endblock form_widget_simple -%}
+
+{%- block button_widget -%}
+    {%- if label is empty -%}
+        {% set label = name|humanize %}
+    {%- endif -%}
+    <button class="btn btn-primary" type="{{ type|default('button') }}" {{ block('button_attributes') }}>{{ label|trans({}, translation_domain) }}</button>
+{%- endblock button_widget -%}
+
+{%- block form_start -%}
+    {% set method = method|upper %}
+    {%- if method in ["GET", "POST"] -%}
+    {% set form_method = method %}
+{%- else -%}
+    {% set form_method = "POST" %}
+{%- endif -%}
+    {% set attr = attr|merge({'class': (attr.class|default('') ~ ' form-horizontal')|trim}) %}
+    <form method="{{ form_method|lower }}" action="{{ action }}"{% for attrname, attrvalue in attr %} {{ attrname }}="{{ attrvalue }}"{% endfor %}{% if multipart %} enctype="multipart/form-data"{% endif %}>
+    {%- if form_method != method -%}
+    <input type="hidden" name="_method" value="{{ method }}" />
+{%- endif -%}
+{%- endblock form_start -%}
+
+{%- block form_row -%}
+    <div class="form-group {% if form.vars.valid == false %}has-error{% endif %}">
+        {{- form_label(form) -}}
+        <div class="col-sm-10">
+            {{- form_widget(form) -}}
+
+            {% if form.vars.attr.help | default('') is not empty %}
+                <span id="helpBlock" class="help-block">
+                    {{ form.vars.attr.help | raw }}
+                </span>
+            {% endif %}
+
+            {% if form.vars.valid == false %}
+                <span id="helpBlock" class="help-block">
+                    {{- form_errors(form) -}}
+                </span>
+            {% endif %}
+        </div>
+    </div>
+{%- endblock form_row -%}
+
+{%- block form_label -%}
+    {% if label is not sameas(false) %}
+        {%- if not compound -%}
+    {% set label_attr = label_attr|merge({'for': id}) %}
+{%- endif -%}
+        {%- if required -%}
+    {% set label_attr = label_attr|merge({'class': (label_attr.class|default('') ~ ' required')|trim}) %}
+{%- endif -%}
+        {%- if label is empty -%}
+    {% set label = name|humanize %}
+{%- endif -%}
+    {% set label_attr = label_attr|merge({'class': (label_attr.class|default('') ~ ' control-label col-sm-2')|trim}) %}
+    <label {% for attrname, attrvalue in label_attr %} {{ attrname }}="{{ attrvalue }}"{% endfor %}>{{ label|trans({}, translation_domain) }}</label>
+    {%- endif -%}
+{%- endblock form_label -%}
+
+{%- block button_row -%}
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            {{- form_widget(form) -}}
+        </div>
+    </div>
+{%- endblock button_row -%}
+
+{%- block collection_widget -%}
+    {% if prototype is defined %}
+        {%- set attr = attr|merge({'data-prototype': form_row(prototype), 'data-count': form|length}) -%}
+    {% endif %}
+    {{- block('form_widget') -}}
+    {% if allow_add %}
+        <a href="#" class="btn btn-success btn-sm" id="add-{{ name }}">Add</a>
+    {% endif %}
+{%- endblock collection_widget -%}
+
+{%- block textarea_widget -%}
+    <textarea {{ block('widget_attributes') }}>{{ value }}</textarea>
+{%- endblock textarea_widget -%}
+
+{%- block form_widget_compound -%}
+    <div {{ block('widget_container_attributes') }} data-compound="true">
+        {%- if form.parent is empty -%}
+            {{ form_errors(form) }}
+        {%- endif -%}
+        {{- block('form_rows') -}}
+        {{- form_rest(form) -}}
+    </div>
+{%- endblock form_widget_compound -%}
+
+{%- block widget_attributes -%}
+    {% set attr = attr|merge({'class': (attr.class|default('') ~ ' form-control')|trim}) %}
+    id="{{ id }}" name="{{ full_name }}"{% if read_only %} readonly="readonly"{% endif %}{% if disabled %} disabled="disabled"{% endif %}{% if required %} required="required"{% endif %}{% if max_length %} maxlength="{{ max_length }}"{% endif %}{% if pattern %} pattern="{{ pattern }}"{% endif %}
+    {%- for attrname, attrvalue in attr %} {% if attrname in ['placeholder', 'title'] %}{{ attrname }}="{{ attrvalue|trans({}, translation_domain) }}"{% else %}{{ attrname }}="{{ attrvalue }}"{% endif %}{%- endfor -%}
+{%- endblock widget_attributes -%}
+
+{#{%- block checkbox_widget -%}#}
+    {#<input type="checkbox" {% if value is defined %} value="{{ value }}"{% endif %}{% if checked %} checked="checked"{% endif %} />#}
+{#{%- endblock checkbox_widget -%}#}
+
+{%- block checkbox_widget -%}
+    <input type="checkbox" class="" {{ block('widget_attributes') }}{% if value is defined %} value="{{ value }}"{% endif %}{% if checked %} checked="checked"{% endif %}/>
+{%- endblock checkbox_widget -%}

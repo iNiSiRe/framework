@@ -78,10 +78,10 @@ class RequestEventListener extends Service
         if (empty($locales)) {
             return false;
         }
-        $locales = implode('|', $locales);
-        if (preg_match("#^/({$locales})/#", $request->getUrl(), $matches)) {
+        $string = implode('|', $locales);
+        if (preg_match("#^/({$string})/?#", $request->getUrl(), $matches)) {
             $locale = $matches[1];
-            $request->setUrl(preg_replace("#^/{$matches[1]}/#", '/', $request->getUrl(), 1));
+            $request->setUrl(preg_replace("#^/{$matches[1]}/?#", '/', $request->getUrl(), 1));
         } else {
             $locale = $locales[0];
         }

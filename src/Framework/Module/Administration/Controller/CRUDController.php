@@ -127,6 +127,7 @@ class CRUDController extends Controller
      * @param         $pageName
      *
      * @return RedirectResponse|Response
+     *
      * @throws AccessDeniedException
      * @throws NotFoundException
      * @throws \Doctrine\Common\Persistence\Mapping\MappingException
@@ -134,96 +135,36 @@ class CRUDController extends Controller
      */
     public function createAction(Request $request, $pageName)
     {
+        /**
+         * @var Page $page
+         * @var EntityManager $em
+         */
         if (!$this->isGranted($request)) {
             throw new AccessDeniedException();
         }
-
-        /** @var Page $page */
-        /** @var EntityManager $em */
         $page = $this->container->get('administration')->get($pageName);
         $em = $this->container->get('doctrine')->getManager();
-
         if (!$page) {
             throw new NotFoundException();
         }
-
-        $entity = $page->getEntity();
-        $metadata = $em->getMetadataFactory()->getMetadataFor($entity);
-
-        $editFields = $page->getEditFields();
-
-        $formFields = [];
-        foreach ($editFields as $field => $options) {
-
-            if (!isset($options['type'])) {
-                $this->defineFieldType($metadata, $field, $options);
-            }
-
-            $formFields[] = array_merge(['name' => $field], $options);
-        }
-
-        $fields = $formFields;
-
-        if ($request->isMethod('post')) {
-            $item = new $entity;
-            foreach ($fields as $field) {
-
-                $name = $field['name'];
-
-                if ($field['type'] == 'file') {
-                    $value = $request->files->get($name);
-                } else {
-                    $value = $this->transformValue($field['type'], $request->atributes->get($name));
-                }
-
-                switch (true) {
-                    case ($metadata->getTypeOfField($name) !== null) :
-                        $setter = 'set' . ucfirst($name);
-                        if (method_exists($item, $setter)) {
-                            $item->$setter($value);
-                        }
-                        break;
-
-                    case ($metadata->getAssociationTargetClass($name) !== null) :
-                        $association = $metadata->getAssociationMapping($name);
-                        $targetClass = $association['targetEntity'];
-                        if (!empty($value)) {
-                            switch ($association['type']) {
-                                case ClassMetadataInfo::MANY_TO_MANY:
-                                    $entityValue = [];
-                                    if (is_array($value)) {
-                                        foreach ($value as $id) {
-                                            $entityValue[] = $em->getRepository($targetClass)->find($id);
-                                        }
-                                    } else {
-                                        $entityValue[] = $em->getRepository($targetClass)->find($value);
-                                    }
-                                    $value = $entityValue;
-                                    break;
-
-                                case ClassMetadataInfo::MANY_TO_ONE:
-                                    $value = $em->getRepository($targetClass)->find($value);
-                                    break;
-                            }
-                        }
-                        $setter = $this->recognizeSetter($item, $name);
-                        $item->$setter($value);
-                        break;
-
-                    default:
-                }
-            }
-            $em->persist($item);
-            $em->flush();
-
+        $class = $page->getEntity();
+        $formBuilder = $this->createFormBuilder(new $class());
+        $page->buildEditForm($formBuilder);
+        $form = $formBuilder->getForm();
+        $form->submit($request->atributes);
+        if ($form->isValid()) {
+            $object = $form->getData();
+            $em->persist($object);
+            $em->flush($object);
             $url = $this->container->get('router')->generateUrl('administration_list', [$pageName]);
-
-            return new RedirectResponse($url);
+            $response = new RedirectResponse($url);
+        } else {
+            $action = $this->container->get('router')->generateUrl('administration_create', [$pageName]);
+            $form = $form->createView();
+            $response = new Response($this->render('Framework/Module/Administration/View/create.html.twig', compact('form', 'action')));
         }
 
-        $action = $this->container->get('router')->generateUrl('administration_create', [$pageName]);
-
-        return new Response($this->render('Framework/Module/Administration/View/create.html.twig', compact('fields', 'action')));
+        return $response;
     }
 
     public function recognizeSetter($object, $name)
