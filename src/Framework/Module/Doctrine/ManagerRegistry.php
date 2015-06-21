@@ -94,7 +94,7 @@ class ManagerRegistry implements ManagerRegistryInterface
      */
     public function getManagers()
     {
-        return [$this->em];
+        return ['default' => $this->em];
     }
 
     /**

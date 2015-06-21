@@ -18,6 +18,7 @@ use React\Filesystem\Filesystem;
 use React\Http\Handler\RequestHandler;
 use React\Http\Processor\FormField;
 use React\Socket\Server;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class HttpServer extends Service
 {
@@ -85,15 +86,17 @@ class HttpServer extends Service
                         if (!filesize($filename)) {
                             return;
                         }
-                        $file = new File();
-                        $file->setName($filename);
-                        $file->setOriginalName($field->attributes->get(FormField::ORIGINAL_FILENAME));
+                        $file = new UploadedFile($filename, $field->attributes->get(FormField::ORIGINAL_FILENAME));
                         $kernelRequest->files->set($field->getName(), $file);
                     };
                 } else {
                     $total = '';
                     $dataHandler = function ($data) use (&$total) {
-                        $total .= $data;
+                        if (is_array($data)) {
+                            $total = $data;
+                        } else {
+                            $total .= $data;
+                        }
                     };
                     $endDataHandler = function ($data) use (&$total, $dataHandler, $kernelRequest, $field) {
                         $dataHandler($data);

@@ -2,7 +2,6 @@
 
 namespace Framework\Module\Administration\Controller;
 
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Framework\Module\Administration\Page;
@@ -124,6 +123,23 @@ class CRUDController extends Controller
 
     /**
      * @param Request $request
+     *
+     * @return \Symfony\Component\HttpFoundation\Request
+     */
+    private function convertRequest(Request $request)
+    {
+        return \Symfony\Component\HttpFoundation\Request::create(
+            $request->getUrl(),
+            $request->getMethod(),
+            $request->atributes->all(),
+            $request->cookies->all(),
+            $request->files->all(),
+            []
+        );
+    }
+
+    /**
+     * @param Request $request
      * @param         $pageName
      *
      * @return RedirectResponse|Response
@@ -151,7 +167,7 @@ class CRUDController extends Controller
         $formBuilder = $this->createFormBuilder(new $class());
         $page->buildEditForm($formBuilder);
         $form = $formBuilder->getForm();
-        $form->submit($request->atributes);
+        $form->handleRequest($this->convertRequest($request));
         if ($form->isValid()) {
             $object = $form->getData();
             $em->persist($object);
@@ -210,94 +226,23 @@ class CRUDController extends Controller
             throw new NotFoundException();
         }
 
-        $fields = $page->getEditFields();
-        $metadata = $em->getMetadataFactory()->getMetadataFor($entityClass);
-
-        $form = [];
-        foreach ($fields as $field => $options) {
-            if (!isset($options['type'])) {
-                $this->defineFieldType($metadata, $field, $fields[$field]);
-            }
-
-            $getter = $this->recognizeGetter($object, $field);
-            $value = $object->$getter();
-
-            switch (true) {
-                case ($metadata->getTypeOfField($field) !== null) :
-                    $fields[$field]['value'] = $value;
-                    break;
-
-                case ($metadata->getAssociationTargetClass($field) !== null) :
-                    $association = $metadata->getAssociationMapping($field);
-                    $targetClass = $association['targetEntity'];
-                    if (is_array($value) || $value instanceof \ArrayAccess) {
-                        $fields[$field]['value'] = $value;
-                    } else {
-                        $fields[$field]['value'] = $em->getRepository($targetClass)->find($value);
-                    }
-                    break;
-
-                default:
-            }
-
-            $form[] = array_merge(['name' => $field], $fields[$field]);
-        }
-
-        if ($request->isMethod('post')) {
-            foreach ($fields as $field => $options) {
-                if ($options['type'] == 'file') {
-                    $value = $request->files->get($field);
-                } else {
-                    $value = $this->transformValue($options['type'], $request->atributes->get($field));
-                }
-
-                $setter = $this->recognizeSetter($object, $field);
-
-                switch (true) {
-                    case ($metadata->getTypeOfField($field) !== null) :
-                        if ($value !== null) {
-                            $object->$setter($value);
-                        }
-                        break;
-
-                    case ($metadata->getAssociationTargetClass($field) !== null) :
-                        $association = $metadata->getAssociationMapping($field);
-                        $targetClass = $association['targetEntity'];
-                        if (!empty($value)) {
-                            switch ($association['type']) {
-                                case ClassMetadataInfo::MANY_TO_MANY:
-                                    $entityValue = [];
-                                    if (is_array($value)) {
-                                        foreach ($value as $id) {
-                                            $entityValue[] = $em->getRepository($targetClass)->find($id);
-                                        }
-                                    } else {
-                                        $entityValue[] = $em->getRepository($targetClass)->find($value);
-                                    }
-                                    $value = $entityValue;
-                                    break;
-
-                                case ClassMetadataInfo::MANY_TO_ONE:
-                                    $value = $em->getRepository($targetClass)->find($value);
-                                    break;
-                            }
-                        }
-                        $object->$setter($value);
-                        break;
-                }
-            }
-
+        $builder = $this->createFormBuilder($object);
+        $page->buildEditForm($builder);
+        $form = $builder->getForm();
+        $form->handleRequest($this->convertRequest($request));
+        if ($form->isValid()) {
+            $object = $form->getData();
             $em->persist($object);
             $em->flush($object);
-
             $url = $this->container->get('router')->generateUrl('administration_list', [$pageName]);
-
-            return new RedirectResponse($url);
+            $response = new RedirectResponse($url);
+        } else {
+            $action = $this->container->get('router')->generateUrl('administration_edit', [$pageName, $id]);
+            $form = $form->createView();
+            $response = new Response($this->render('Framework/Module/Administration/View/edit.html.twig', compact('form', 'action')));
         }
 
-        $action = $this->container->get('router')->generateUrl('administration_edit', [$pageName, $id]);
-
-        return new Response($this->render('Framework/Module/Administration/View/edit.html.twig', compact('form', 'action')));
+        return $response;
     }
 
     /**
