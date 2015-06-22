@@ -59,6 +59,8 @@ class HttpServer extends Service
                 $request->getVersion()
             );
 
+            $kernelRequest->findClientIp();
+
             $kernelRequest->on('response', function (KernelResponse $kernelResponse) use ($response) {
                 $response->writeHead($kernelResponse->getStatusCode(), $kernelResponse->getHeaders());
                 $response->end($kernelResponse->getBody());

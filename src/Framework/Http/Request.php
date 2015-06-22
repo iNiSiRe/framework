@@ -19,7 +19,7 @@ class Request extends EventEmitter
     const POST = 'POST';
 
     private $trustedHeaders = [
-        self::HEADER_CLIENT_IP => ['X-Forwarded-For']
+        self::HEADER_CLIENT_IP => ['X-Real-IP']
     ];
 
     /**
@@ -80,8 +80,7 @@ class Request extends EventEmitter
         $this->query = new Dictionary($query);
         $this->headers = $headers;
         $this->version = $version;
-        $this->setClientIp();
-        $this->setHost();
+        $this->processHost();
 
         $this->files = new Dictionary();
         $this->atributes = new Dictionary();
@@ -109,8 +108,15 @@ class Request extends EventEmitter
 
     /**
      * Find client IP
+     *
+     * @param $clientIp
      */
-    private function setClientIp()
+    public function setClientIp($clientIp)
+    {
+        $this->clientIp = $clientIp;
+    }
+
+    public function findClientIp()
     {
         foreach ($this->trustedHeaders[self::HEADER_CLIENT_IP] as $header) {
             if ($clientIp = $this->headers->get($header)) {
@@ -120,7 +126,7 @@ class Request extends EventEmitter
         }
     }
 
-    private function setHost()
+    private function processHost()
     {
         $this->host = $this->headers->get('Host');
     }
@@ -213,23 +219,6 @@ class Request extends EventEmitter
     public function setBody($body)
     {
         $this->body = $body;
-    }
-
-    public function isMultipart()
-    {
-        return strpos($this->headers->get('Content-Type'), 'multipart') !== false;
-    }
-
-    public function handleData($data)
-    {
-        if ($this->isMultipart()) {
-            $this->mode = self::MODE_MULTIPART_DATA;
-            $multipartProvider = new MultipartRequestProvider();
-            $data = $multipartProvider->parseRequest($contentType, $data);
-        } else {
-            $request->setBody($data);
-            $dispatcher->dispatch('request', [$request]);
-        }
     }
 
     public function handleClose()

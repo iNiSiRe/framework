@@ -28,6 +28,8 @@ class RequestEventListener extends Service
     public function onRequest(Request $request)
     {
         try {
+            $twig = $this->container->get('twig');
+            $twig->addGlobal('request', $request);
             $this->recognizeLocale($request);
             $response = $this->container->get('router')->handle($request);
 
