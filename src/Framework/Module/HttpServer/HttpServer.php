@@ -79,7 +79,7 @@ class HttpServer extends Service
             $requestHandler->on('data', function (FormField $field) use ($kernelRequest) {
                 if ($field->isFile()) {
                     $filename = tempnam(sys_get_temp_dir(), '');
-                    $kernelRequest->files->set($field->getName(), null);
+//                    $kernelRequest->files->set($field->getName(), null);
                     $dataHandler = function ($data) use ($filename) {
                         file_put_contents($filename, $data, FILE_APPEND | FILE_BINARY);
                     };
@@ -89,7 +89,11 @@ class HttpServer extends Service
                             return;
                         }
                         $file = new UploadedFile($filename, $field->attributes->get(FormField::ORIGINAL_FILENAME));
-                        $kernelRequest->files->set($field->getName(), $file);
+                        parse_str($field->getName(), $data);
+                        $key = key($data);
+                        $parent = $data[$key];
+                        $parent[key($parent)] = $file;
+                        $kernelRequest->files->set($key, $parent);
                     };
                 } else {
                     $total = '';
