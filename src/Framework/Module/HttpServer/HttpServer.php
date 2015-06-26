@@ -50,7 +50,6 @@ class HttpServer extends Service
         $dispatcher = $this->container->get('event_dispatcher');
 
         $this->http->on('request', function (\React\Http\Request $request, \React\Http\Response $response) use ($dispatcher) {
-
             $kernelRequest = new KernelRequest(
                 $request->getMethod(),
                 $request->getPath(),
@@ -88,13 +87,11 @@ class HttpServer extends Service
                         if (!filesize($filename)) {
                             return;
                         }
-
                         $file = new UploadedFile(
                             $filename,
                             $field->attributes->get(FormField::ORIGINAL_FILENAME),
                             null, null, null, true
                         );
-
                         parse_str($field->getName(), $data);
                         $key = key($data);
                         $parent = $data[$key];
