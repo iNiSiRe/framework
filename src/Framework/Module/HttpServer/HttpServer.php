@@ -88,7 +88,13 @@ class HttpServer extends Service
                         if (!filesize($filename)) {
                             return;
                         }
-                        $file = new UploadedFile($filename, $field->attributes->get(FormField::ORIGINAL_FILENAME));
+
+                        $file = new UploadedFile(
+                            $filename,
+                            $field->attributes->get(FormField::ORIGINAL_FILENAME),
+                            null, null, null, true
+                        );
+
                         parse_str($field->getName(), $data);
                         $key = key($data);
                         $parent = $data[$key];
