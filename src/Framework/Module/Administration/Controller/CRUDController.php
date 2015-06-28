@@ -3,7 +3,6 @@
 namespace Framework\Module\Administration\Controller;
 
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Framework\Module\Administration\Page;
 use Framework\Controller\Controller;
 use Framework\Http\RedirectResponse;
