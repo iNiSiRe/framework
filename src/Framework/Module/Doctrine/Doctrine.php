@@ -4,17 +4,12 @@ namespace Framework\Module\Doctrine;
 
 use Application\Common\Subscriber\DoctrineSubscriber;
 use Doctrine\Common\Cache\MemcachedCache;
-use Doctrine\Common\EventManager;
 use Doctrine\DBAL\Tools\Console\Helper\ConnectionHelper;
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Tools\Console\Command\SchemaTool\CreateCommand;
-use Doctrine\ORM\Tools\Console\Command\SchemaTool\DropCommand;
-use Doctrine\ORM\Tools\Console\Command\SchemaTool\UpdateCommand;
 use Doctrine\ORM\Tools\Console\Helper\EntityManagerHelper;
 use Doctrine\ORM\Tools\Setup;
 use Framework\DependencyInjection\Container\Service;
 use Framework\Module\Console\Console;
-use Framework\Module\Doctrine\Command\DoctrineCommandHelper;
 
 class Doctrine extends Service
 {
@@ -36,7 +31,7 @@ class Doctrine extends Service
     public function initialize()
     {
         $this->initializeEntityManager();
-        $this->initializeCommands();
+//        $this->initializeCommands();
     }
 
     private function initializeEntityManager()

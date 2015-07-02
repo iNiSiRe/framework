@@ -2,7 +2,10 @@ services:
   doctrine: Framework\Module\Doctrine\Doctrine
 
 commands:
-  doctrine_schema_update: Framework\Module\Doctrine\Command\UpdateSchemaCommand
+#  doctrine_schema_update: Framework\Module\Doctrine\Command\UpdateSchemaCommand
+  doctrine_create: Doctrine\ORM\Tools\Console\Command\SchemaTool\CreateCommand
+  doctrine_drop: Doctrine\ORM\Tools\Console\Command\SchemaTool\DropCommand
+  doctrine_update: Doctrine\ORM\Tools\Console\Command\SchemaTool\UpdateCommand
 
 doctrine:
   driver: pdo_mysql

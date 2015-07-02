@@ -99,4 +99,12 @@ class Kernel
     {
         return self::$environmentLabels[$environment];
     }
+
+    /**
+     * @return Container
+     */
+    public function getContainer()
+    {
+        return $this->container;
+    }
 }
