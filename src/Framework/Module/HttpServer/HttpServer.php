@@ -13,6 +13,7 @@ use Framework\Http\File;
 use Framework\Http\Request as KernelRequest;
 use Framework\Http\Response as KernelResponse;
 use Framework\Module\EventDispatcher\EventDispatcher;
+use Framework\Module\HttpServer\Event\RequestEvent;
 use React\EventLoop\Factory;
 use React\Filesystem\Filesystem;
 use React\Http\Handler\RequestHandler;
@@ -66,7 +67,7 @@ class HttpServer extends Service
             });
 
             $kernelRequest->on('end', function () use ($dispatcher, $kernelRequest) {
-                $dispatcher->dispatch('request', [$kernelRequest]);
+                $dispatcher->dispatch('request', new RequestEvent($kernelRequest));
             });
 
             $requestHandler = new RequestHandler();
@@ -78,7 +79,6 @@ class HttpServer extends Service
             $requestHandler->on('data', function (FormField $field) use ($kernelRequest) {
                 if ($field->isFile()) {
                     $filename = tempnam(sys_get_temp_dir(), '');
-//                    $kernelRequest->files->set($field->getName(), null);
                     $dataHandler = function ($data) use ($filename) {
                         file_put_contents($filename, $data, FILE_APPEND | FILE_BINARY);
                     };

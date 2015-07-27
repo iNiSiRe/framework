@@ -13,20 +13,22 @@ use Framework\DependencyInjection\Container\Service;
 use Framework\Http\Request;
 use Framework\Http\Response;
 use Framework\Kernel;
+use Framework\Module\HttpServer\Event\RequestEvent;
 use Framework\Module\Router\Exception\AccessDeniedException;
 use Framework\Module\Router\Exception\NotFoundException;
 
 class RequestEventListener extends Service
 {
     /**
-     * @param Request $request
+     * @param RequestEvent $event
      *
      * @return Response
-     *
      * @throws \Exception
      */
-    public function onRequest(Request $request)
+    public function onRequest(RequestEvent $event)
     {
+        $request = $event->getRequest();
+
         try {
             $twig = $this->container->get('twig');
             $twig->addGlobal('request', $request);
