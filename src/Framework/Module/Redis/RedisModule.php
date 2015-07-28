@@ -1,10 +1,10 @@
 <?php
 
-namespace Framework\Module\Memcached;
+namespace Framework\Module\Redis;
 
 use Framework\Module;
 
-class MemcachedModule extends Module
+class RedisModule extends Module
 {
     public function getConfigurations()
     {
