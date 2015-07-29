@@ -39,13 +39,16 @@ class EventDispatcher extends Service
 
         $listeners = $this->container->configuration->get('listeners', []);
 
-        foreach ($listeners as $name => $listener)
-        {
+        foreach ($listeners as $name => $listener) {
             list($service, $method) = explode(':', $listener);
             $this->listen($name, [$this->container->get($service), $method]);
         }
     }
 
+    /**
+     * @param EventInterface $event
+     * @param bool           $asynchronously
+     */
     public function dispatch(EventInterface $event, $asynchronously = false)
     {
         if (!$asynchronously) {
@@ -55,6 +58,10 @@ class EventDispatcher extends Service
         }
     }
 
+    /**
+     * @param string   $name
+     * @param callable $listener
+     */
     public function listen($name, callable $listener)
     {
         $this->scope->on($name, $listener);
