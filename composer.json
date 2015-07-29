@@ -16,6 +16,7 @@
     "symfony/translation": "2.6.6",
     "symfony/config": "2.6.6",
     "doctrine/orm": "2.4.7",
-    "twig/twig": "1.18.0"
+    "twig/twig": "1.18.0",
+    "predis/predis-async": "v0.2.3"
   }
 }
