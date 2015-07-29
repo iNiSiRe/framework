@@ -6,4 +6,4 @@ extensions:
   router: Framework\Module\Router\Extension\RouterExtension
 
 listeners:
-  request: request_listener:onRequest
+  event.request: request_listener:onRequest

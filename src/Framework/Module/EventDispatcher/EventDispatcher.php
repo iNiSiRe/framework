@@ -10,51 +10,53 @@ namespace Framework\Module\EventDispatcher;
 
 use Evenement\EventEmitter;
 use Framework\DependencyInjection\Container\Service;
+use Framework\Module\HttpServer\HttpServer;
 
 class EventDispatcher extends Service
 {
     /**
-     * @var \Redis
+     * @var \SplQueue
      */
-    private $redis;
+    private $queue;
 
     public function __construct()
     {
         parent::__construct();
         $this->scope = new EventEmitter();
+        $this->queue = new \SplQueue();
     }
 
     public function initialize()
     {
+        /** @var HttpServer $server */
+        $server = $this->container->get('http_server');
+
+        // Async dispatcher
+        $server->getLoop()->addPeriodicTimer(1, function () {
+            $event = $this->queue->dequeue();
+            $this->dispatch($event);
+        });
+
         $listeners = $this->container->configuration->get('listeners', []);
 
-        $this->redis = $this->container->get('redis');
-
-        foreach ($listeners as $event => $listener)
+        foreach ($listeners as $name => $listener)
         {
             list($service, $method) = explode(':', $listener);
-            $this->listen($event, [$this->container->get($service), $method]);
+            $this->listen($name, [$this->container->get($service), $method]);
         }
     }
 
-    public function dispatch($name, $event, $asynchronously = false)
+    public function dispatch(EventInterface $event, $asynchronously = false)
     {
         if (!$asynchronously) {
-            $this->scope->emit($name, [$event]);
+            $this->scope->emit($event->getName(), [$event]);
         } else {
-
+            $this->queue->enqueue($event);
         }
     }
 
-    public function listen($event, callable $listener)
+    public function listen($name, callable $listener)
     {
-        $this->scope->on($event, $listener);
-    }
-
-    private function dispatchAsynchronously($name, $event)
-    {
-        $key = 'dispatcher:' . $name;
-        $data = serialize($event);
-        $this->redis->lPush($key, $data);
+        $this->scope->on($name, $listener);
     }
 }

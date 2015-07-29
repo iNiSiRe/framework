@@ -67,7 +67,7 @@ class HttpServer extends Service
             });
 
             $kernelRequest->on('end', function () use ($dispatcher, $kernelRequest) {
-                $dispatcher->dispatch('request', new RequestEvent($kernelRequest));
+                $dispatcher->dispatch(new RequestEvent($kernelRequest));
             });
 
             $requestHandler = new RequestHandler();
@@ -133,5 +133,13 @@ class HttpServer extends Service
     public function run()
     {
         $this->loop->run();
+    }
+
+    /**
+     * @return \React\EventLoop\ExtEventLoop|\React\EventLoop\LibEventLoop|\React\EventLoop\LibEvLoop|\React\EventLoop\StreamSelectLoop
+     */
+    public function getLoop()
+    {
+        return $this->loop;
     }
 }
