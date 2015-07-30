@@ -11,6 +11,7 @@ namespace Framework\Module\EventDispatcher;
 use Evenement\EventEmitter;
 use Framework\DependencyInjection\Container\Service;
 use Framework\Module\HttpServer\HttpServer;
+use React\EventLoop\Timer\Timer;
 
 class EventDispatcher extends Service
 {
@@ -40,7 +41,7 @@ class EventDispatcher extends Service
         $server = $this->container->get('http_server');
 
         // Run async dispatcher
-        $server->getLoop()->addPeriodicTimer(1, function () {
+        $server->getLoop()->addPeriodicTimer(Timer::MIN_INTERVAL * 10, function () {
             if ($this->queue->isEmpty()) {
                 return;
             }
