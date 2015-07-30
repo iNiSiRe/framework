@@ -10,6 +10,7 @@ use Framework\Http\Request;
 use Framework\Http\Response;
 use Framework\Module\EventDispatcher\EventDispatcherModule;
 use Framework\Module\HttpServer\HttpServerModule;
+use Framework\Module\Redis\RedisModule;
 use React\EventLoop\Factory;
 use React\Http\Request as ReactRequest;
 use React\Http\Response as ReactResponse;
@@ -57,6 +58,7 @@ class Kernel
 
         // Enable modules
         $this->modules = [
+            new RedisModule(),
             new EventDispatcherModule(),
             new HttpServerModule(),
             new MemcachedModule(),

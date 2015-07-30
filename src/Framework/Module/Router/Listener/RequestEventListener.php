@@ -37,8 +37,8 @@ class RequestEventListener extends Service
 
             // Clear Doctrine cache
             /** @var EntityManager $em */
-            $em = $this->container->get('doctrine')->getManager();
-            $em->getUnitOfWork()->clear();
+//            $em = $this->container->get('doctrine')->getManager();
+//            $em->getUnitOfWork()->clear();
         } catch (\Exception $e) {
 
             switch (true) {

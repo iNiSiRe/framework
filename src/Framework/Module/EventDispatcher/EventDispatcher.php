@@ -24,25 +24,29 @@ class EventDispatcher extends Service
         parent::__construct();
         $this->scope = new EventEmitter();
         $this->queue = new \SplQueue();
+        $this->queue->setIteratorMode(\SplQueue::IT_MODE_DELETE);
     }
 
     public function initialize()
     {
-        /** @var HttpServer $server */
-        $server = $this->container->get('http_server');
-
-        // Async dispatcher
-        $server->getLoop()->addPeriodicTimer(1, function () {
-            $event = $this->queue->dequeue();
-            $this->dispatch($event);
-        });
-
         $listeners = $this->container->configuration->get('listeners', []);
 
         foreach ($listeners as $name => $listener) {
             list($service, $method) = explode(':', $listener);
             $this->listen($name, [$this->container->get($service), $method]);
         }
+
+        /** @var HttpServer $server */
+        $server = $this->container->get('http_server');
+
+        // Run async dispatcher
+        $server->getLoop()->addPeriodicTimer(1, function () {
+            if ($this->queue->isEmpty()) {
+                return;
+            }
+            $event = $this->queue->dequeue();
+            $this->dispatch($event);
+        });
     }
 
     /**

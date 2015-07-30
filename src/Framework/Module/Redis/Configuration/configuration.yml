@@ -2,5 +2,5 @@ services:
   redis: Framework\Module\Redis\RedisBuilder
 
 redis:
-  host: 127.0.0.1
-  port: 11211
+  host: redis
+  port: 6379

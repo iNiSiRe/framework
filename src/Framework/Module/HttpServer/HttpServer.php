@@ -47,10 +47,11 @@ class HttpServer extends Service
         $this->socket = new Server($this->loop);
         $this->http = new \React\Http\Server($this->socket);
 
-        /** @var EventDispatcher $dispatcher */
-        $dispatcher = $this->container->get('event_dispatcher');
+        $this->http->on('request', function (\React\Http\Request $request, \React\Http\Response $response) {
 
-        $this->http->on('request', function (\React\Http\Request $request, \React\Http\Response $response) use ($dispatcher) {
+            /** @var EventDispatcher $dispatcher */
+            $dispatcher = $this->container->get('event_dispatcher');
+
             $kernelRequest = new KernelRequest(
                 $request->getMethod(),
                 $request->getPath(),
