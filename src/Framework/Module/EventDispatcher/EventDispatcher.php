@@ -28,6 +28,22 @@ class EventDispatcher extends Service
         $this->queue->setIteratorMode(\SplQueue::IT_MODE_DELETE);
     }
 
+    private function run()
+    {
+        /** @var HttpServer $server */
+        $server = $this->container->get('http_server');
+
+        // Run async dispatcher
+        $server->getLoop()->addPeriodicTimer(Timer::MIN_INTERVAL, function (Timer $timer) {
+            if ($this->queue->isEmpty()) {
+                $timer->cancel();
+                return;
+            }
+            $event = $this->queue->dequeue();
+            $this->dispatch($event);
+        });
+    }
+
     public function initialize()
     {
         $listeners = $this->container->configuration->get('listeners', []);
@@ -36,18 +52,6 @@ class EventDispatcher extends Service
             list($service, $method) = explode(':', $listener);
             $this->listen($name, [$this->container->get($service), $method]);
         }
-
-        /** @var HttpServer $server */
-        $server = $this->container->get('http_server');
-
-        // Run async dispatcher
-        $server->getLoop()->addPeriodicTimer(Timer::MIN_INTERVAL * 10, function () {
-            if ($this->queue->isEmpty()) {
-                return;
-            }
-            $event = $this->queue->dequeue();
-            $this->dispatch($event);
-        });
     }
 
     /**
@@ -60,6 +64,7 @@ class EventDispatcher extends Service
             $this->scope->emit($event->getName(), [$event]);
         } else {
             $this->queue->enqueue($event);
+            $this->run();
         }
     }
 
