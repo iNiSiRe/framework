@@ -47,22 +47,22 @@ class CRUDController extends Controller
 
         $formFields = [];
         foreach ($listFields as $field) {
-            switch (true) {
-                case ($metadata->getTypeOfField($field) !== null) :
-                    $fieldOptions = [
-                        'type' => $metadata->getTypeOfField($field)
-                    ];
-                    break;
+            $fieldOptions = [];
+            if ($metadata->hasField($field)) {
+                switch (true) {
+                    case ($metadata->getTypeOfField($field) !== null) :
+                        $fieldOptions = [
+                            'type' => $metadata->getTypeOfField($field)
+                        ];
+                        break;
 
-                case ($metadata->getAssociationTargetClass($field) !== null) :
-                    $fieldOptions = [
-                        'type' => 'entity'
-                    ];
+                    case ($metadata->getAssociationTargetClass($field) !== null) :
+                        $fieldOptions = [
+                            'type' => 'entity'
+                        ];
 
-                    break;
-
-                default:
-                    $fieldOptions = [];
+                        break;
+                }
             }
 
             $formFields[] = array_merge(['name' => $field], $fieldOptions);
@@ -70,7 +70,7 @@ class CRUDController extends Controller
 
         $fields = $formFields;
 
-        $items = $em->getRepository($entity)->findAll();
+        $items = $em->getRepository($entity)->findBy([], $page->getListOrderBy());
 
         return new Response($this->render('Framework/Module/Administration/View/list.html.twig', compact('fields', 'items', 'pageName')));
     }

@@ -21,7 +21,7 @@
             {% for item in items %}
                 <tr>
                     {% for field in fields %}
-                        {% if field.type == 'datetime' %}
+                        {% if field.type == 'datetime' or field.type == 'date' %}
                             <td>{{ attribute(item, field.name) | date }}</td>
                         {% else %}
                             <td>{{ attribute(item, field.name) }}</td>

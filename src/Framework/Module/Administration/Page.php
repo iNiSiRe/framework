@@ -31,4 +31,9 @@ abstract class Page
     {
 
     }
+
+    public function getListOrderBy()
+    {
+        return [];
+    }
 }
