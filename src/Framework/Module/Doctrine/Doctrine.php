@@ -52,10 +52,10 @@ class Doctrine extends Service
             'password' => $this->configuration->get('password'),
             'dbname'   => $this->configuration->get('dbname'),
             'host' => $this->configuration->get('host'),
-//            'charset'  => 'utf8',
-//            'driverOptions' => array(
-//                1002 => 'SET NAMES utf8'
-//            ),
+            'charset'  => 'utf8',
+            'driverOptions' => array(
+                1002 => 'SET NAMES utf8'
+            ),
         );
 
         $this->entityManager = EntityManager::create($connection, $config);

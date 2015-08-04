@@ -49,8 +49,8 @@ class EventDispatcher extends Service
         $listeners = $this->container->configuration->get('listeners', []);
 
         foreach ($listeners as $name => $listener) {
-            list($service, $method) = explode(':', $listener);
-            $this->listen($name, [$this->container->get($service), $method]);
+            list($service, $method) = explode(':', $listener['handler']);
+            $this->listen($listener['event'], [$this->container->get($service), $method]);
         }
     }
 
