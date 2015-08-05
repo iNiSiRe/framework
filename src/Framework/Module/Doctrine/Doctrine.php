@@ -46,39 +46,17 @@ class Doctrine extends Service
 
         $config = Setup::createAnnotationMetadataConfiguration([ROOT_DIR . "/src"], true, ROOT_DIR . '/cache/doctrine/proxy', $cache);
 
-        $connection = array(
+        $connection = [
             'driver'   => $this->configuration->get('driver'),
             'user'     => $this->configuration->get('user'),
             'password' => $this->configuration->get('password'),
             'dbname'   => $this->configuration->get('dbname'),
-            'host' => $this->configuration->get('host'),
-//            'charset'  => 'utf8',
-//            'driverOptions' => array(
-//                1002 => 'SET NAMES utf8'
-//            ),
-        );
+            'host'     => $this->configuration->get('host')
+        ];
 
         $this->entityManager = EntityManager::create($connection, $config);
 
         $eventManager = $this->entityManager->getEventManager();
         $eventManager->addEventSubscriber(new DoctrineSubscriber());
-    }
-
-    private function initializeCommands()
-    {
-        /** @var Console $console */
-        $console = $this->container->get('console');
-
-//        DoctrineCommandHelper::setApplicationEntityManager($console->getApplication(), null);
-
-        $helperSet = $console->getApplication()->getHelperSet();
-        $helperSet->set(new ConnectionHelper($this->getManager()->getConnection()), 'db');
-        $helperSet->set(new EntityManagerHelper($this->getManager()), 'em');
-
-        $console->getApplication()->addCommands([
-            new UpdateCommand(),
-            new CreateCommand(),
-            new DropCommand()
-        ]);
     }
 }

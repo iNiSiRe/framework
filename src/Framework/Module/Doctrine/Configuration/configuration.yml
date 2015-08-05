@@ -6,6 +6,9 @@ commands:
   doctrine_create: Doctrine\ORM\Tools\Console\Command\SchemaTool\CreateCommand
   doctrine_drop: Doctrine\ORM\Tools\Console\Command\SchemaTool\DropCommand
   doctrine_update: Doctrine\ORM\Tools\Console\Command\SchemaTool\UpdateCommand
+  doctrine_clear_metadata: Doctrine\ORM\Tools\Console\Command\ClearCache\MetadataCommand
+  doctrine_clear_query: Doctrine\ORM\Tools\Console\Command\ClearCache\QueryCommand
+  doctrine_clear_result: Doctrine\ORM\Tools\Console\Command\ClearCache\ResultCommand
 
 doctrine:
   driver: pdo_mysql
