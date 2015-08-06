@@ -11,12 +11,11 @@
       "Framework": "src/"
     }
   },
-  "minimum-stability": "dev",
   "require": {
     "symfony/yaml": "2.6.6",
     "symfony/translation": "2.6.6",
     "symfony/config": "2.6.6",
-    "doctrine/orm": "dev-master",
+    "doctrine/orm": "2.5",
     "twig/twig": "1.18.0"
   }
 }
