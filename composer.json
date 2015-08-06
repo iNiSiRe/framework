@@ -11,6 +11,7 @@
       "Framework": "src/"
     }
   },
+  "minimum-stability": "dev",
   "require": {
     "symfony/yaml": "2.6.6",
     "symfony/translation": "2.6.6",
