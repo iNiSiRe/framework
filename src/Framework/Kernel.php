@@ -46,7 +46,17 @@ class Kernel
     /**
      * @var Module[]
      */
-    private $modules;
+    protected $modules;
+
+    /**
+     * @var string
+     */
+    private $environment;
+
+    /**
+     * @var string
+     */
+    private $rootDir;
 
     /**
      * @param     $environment
@@ -54,10 +64,12 @@ class Kernel
      */
     public function __construct($environment, $rootDir)
     {
-        $loader = new ConfigurationLoader();
+        $this->environment = $environment;
+        $this->rootDir = $rootDir;
+        $this->modules = [];
 
         // Enable modules
-        $this->modules = [
+        $this->addModules([
             new RedisModule(),
             new EventDispatcherModule(),
             new HttpServerModule(),
@@ -67,20 +79,27 @@ class Kernel
             new TranslatorModule(),
             new TwigModule(),
             new ConsoleModule(),
-            new AdministrationModule(),
-            new ApplicationModule()
-        ];
+            new AdministrationModule()
+        ]);
+    }
+
+    /**
+     * Load modules
+     */
+    public function load()
+    {
+        $loader = new ConfigurationLoader();
 
         // Load modules configurations
         foreach ($this->modules as $module) {
             $loader->addFiles($module->getConfigurations());
         }
-        
+
         $this->container = new Container($loader->load());
 
         // Define kernel parameters
-        $this->container->parameters->set('kernel.root_dir', $rootDir);
-        $this->container->parameters->set('kernel.env', self::getEnvironmentName($environment));
+        $this->container->parameters->set('kernel.root_dir', $this->rootDir);
+        $this->container->parameters->set('kernel.env', self::getEnvironmentName($this->environment));
 
         // Compile container
         $this->container->compile();
@@ -108,5 +127,13 @@ class Kernel
     public function getContainer()
     {
         return $this->container;
+    }
+
+    /**
+     * @param array $modules
+     */
+    public function addModules(array $modules)
+    {
+        $this->modules = array_merge($this->modules, $modules);
     }
 }
